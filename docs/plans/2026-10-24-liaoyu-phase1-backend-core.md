@@ -435,6 +435,7 @@ CREATE TABLE IF NOT EXISTS service_relations (
   start_date TEXT NOT NULL,
   end_date TEXT NOT NULL,
   calls_left INTEGER NOT NULL DEFAULT 0,
+  reply_hours INTEGER NOT NULL DEFAULT 24,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','ended','refunded','switched')),
   frozen INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -1595,7 +1596,7 @@ git commit -m "feat: 服务分段纯函数（代班/暂停顺延）"
 - Test: `server/tests/orders-service.test.js`
 
 **规则：**
-- 订单保存套餐快照；不能购买自己的套餐；套餐须在售且老师已认证。
+- 订单保存套餐快照；服务关系复制金额/天数/通话次数/回复时效（`reply_hours`）；不能购买自己的套餐；套餐须在售且老师已认证。
 - 履约幂等；金额不符不履约。
 - 周期套餐：若同一用户对同一老师已有未到期的周期服务，新服务从其结束日次日开始（续费顺接）。
 - 单次套餐：有效期 30 天、通话 1 次、`total_days = 0`（不参与日计提，第二阶段按通话计提）。
@@ -1649,6 +1650,7 @@ test('履约创建服务关系与初始分段，且幂等', () => {
   assert.strictEqual(rels[0].end_date, '2026-11-30');
   assert.strictEqual(rels[0].total_days, 30);
   assert.strictEqual(rels[0].calls_left, 4);
+  assert.strictEqual(rels[0].reply_hours, 12);
   assert.deepStrictEqual(loadSegments(w.ctx.db, rels[0].id), [
     { kind: 'normal', teacher_id: w.teacher, start_date: '2026-11-01', end_date: '2026-11-30' },
   ]);
@@ -1727,9 +1729,10 @@ function createRelationForOrder(db, order, today) {
   const totalDays = isSingle ? 0 : snap.days;
   const end = addDays(start, (isSingle ? SINGLE_VALID_DAYS : totalDays) - 1);
   const info = db.prepare(`INSERT INTO service_relations
-      (order_id, user_id, teacher_id, package_type, amount_cents, total_days, start_date, end_date, calls_left)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(order.id, order.user_id, order.teacher_id, snap.type, order.amount_cents, totalDays, start, end, snap.call_quota);
+      (order_id, user_id, teacher_id, package_type, amount_cents, total_days, start_date, end_date, calls_left, reply_hours)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(order.id, order.user_id, order.teacher_id, snap.type, order.amount_cents, totalDays, start, end,
+      snap.call_quota, snap.reply_hours);
   saveSegments(db, info.lastInsertRowid, initialSegments(order.teacher_id, start, end));
   return info.lastInsertRowid;
 }
