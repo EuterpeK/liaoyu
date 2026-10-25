@@ -1,0 +1,15 @@
+{
+  "name": "liaoyu",
+  "private": true,
+  "packageManager": "pnpm@10.34.8",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "check": "biome check . && pnpm -r typecheck && pnpm -r test",
+    "fix": "biome check --write .",
+    "db:up": "docker compose -f deploy/docker-compose.dev.yml up -d --wait",
+    "db:down": "docker compose -f deploy/docker-compose.dev.yml down"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3"
+  }
+}
