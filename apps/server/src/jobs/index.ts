@@ -1,0 +1,67 @@
+import type { FastifyBaseLogger } from 'fastify';
+import { PgBoss } from 'pg-boss';
+import type { DbOrTx } from '../db/client.ts';
+import type { Clock } from '../lib/clock.ts';
+import { todayCN } from '../lib/dates.ts';
+import { runWeeklySettlement } from '../modules/settlement/service.ts';
+import { runDailyJobs } from './daily.ts';
+
+export const TZ = 'Asia/Shanghai';
+
+export interface JobContext {
+  db: DbOrTx;
+  clock: Clock;
+  log: Pick<FastifyBaseLogger, 'info' | 'error'>;
+}
+
+export interface JobDef {
+  name: string;
+  cron: string;
+  run(ctx: JobContext): Promise<unknown>;
+}
+
+export const JOBS: readonly JobDef[] = [
+  {
+    name: 'daily',
+    cron: '10 0 * * *',
+    run: ({ db, clock }) => runDailyJobs(db, todayCN(clock.now())),
+  },
+  {
+    name: 'weekly-settlement',
+    cron: '0 2 * * 1',
+    run: async ({ db, clock }) => ({ created: (await runWeeklySettlement(db, todayCN(clock.now()))).length }),
+  },
+];
+
+/** pg-boss 的最小子集，便于测试替换 */
+export interface JobBoss {
+  getQueue(name: string): Promise<unknown>;
+  createQueue(name: string): Promise<void>;
+  work(name: string, handler: (jobs: unknown[]) => Promise<unknown>): Promise<string>;
+  schedule(name: string, cron: string, data: object, options: { tz: string }): Promise<void>;
+}
+
+export async function registerJobs(boss: JobBoss, ctx: JobContext, jobs: readonly JobDef[] = JOBS): Promise<void> {
+  for (const job of jobs) {
+    if (!(await boss.getQueue(job.name))) await boss.createQueue(job.name);
+    await boss.work(job.name, async () => {
+      try {
+        const result = await job.run(ctx);
+        ctx.log.info({ job: job.name, result }, '定时任务完成');
+        return result;
+      } catch (err) {
+        ctx.log.error({ job: job.name, err }, '定时任务失败');
+        throw err;
+      }
+    });
+    await boss.schedule(job.name, job.cron, {}, { tz: TZ });
+  }
+}
+
+export async function startJobs(databaseUrl: string, ctx: JobContext): Promise<PgBoss> {
+  const boss = new PgBoss({ connectionString: databaseUrl, schema: 'pgboss' });
+  boss.on('error', (err) => ctx.log.error({ err }, 'pg-boss 错误'));
+  await boss.start();
+  await registerJobs(boss, ctx);
+  return boss;
+}
