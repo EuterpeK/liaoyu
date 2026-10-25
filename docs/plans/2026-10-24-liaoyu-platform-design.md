@@ -44,22 +44,25 @@
 
 ```
 微信小程序（用户 / 老师 双身份）──┐
-                                  ├──► 后端服务（Node.js + Express）──► 独立数据库
+                                  ├──► 后端服务（Node.js + Fastify）──► PostgreSQL
 负责人管理网页（电脑浏览器）──────┘           │
                                               ├── ZPAY 支付宝（内测收款，回调自动确认）
                                               ├── 腾讯云 IM（消息）
                                               └── 腾讯云 TRTC（预约通话）
 ```
 
+> 选型详见 `2026-10-25-liaoyu-tech-stack-design.md`（已替代本节原表）。
+
 | 层 | 选型 | 说明 |
 |---|---|---|
-| 小程序 | 原生小程序 + TypeScript | 用户/老师双身份切换 |
-| 管理网页 | Vue3 + Element Plus | 由后端静态托管于 `/admin`，独立账号登录 |
-| 后端 | Node.js + Express + JWT | 对齐 divination 技术路线，便于复用支付代码 |
-| 数据库 | 内测 SQLite（独立文件），数据访问层封装 | 上线可迁 MySQL |
+| 小程序 | 原生小程序 + TypeScript + TDesign | 用户/老师双身份切换 |
+| 管理网页 | Vue3 + TDesign Vue Next | 由后端静态托管于 `/admin`，独立账号登录 |
+| 后端 | Node.js + TypeScript + Fastify + Zod | 自动输出 OpenAPI，两端生成类型 |
+| 数据库 | PostgreSQL + Drizzle | 约束保证分段不重叠、计提幂等 |
+| 定时任务 | pg-boss | 计提、超时、爽约、月度等级 |
 | 消息 | 腾讯云 IM | 消息回调进后端：内容安全、危机关键词、回复时效统计 |
 | 通话 | 腾讯云 TRTC | 通话开始/结束回调，作为计次与准时率依据 |
-| 收款 | `PaymentProvider` 接口 | 实现：`ZPayProvider`（内测）、`WechatPayProvider`（上线） |
+| 收款 | `PaymentProvider` 接口 | 实现：`ZPayProvider`（内测，移植 divination 逻辑）、`WechatPayProvider`（上线） |
 | 打款 | `PayoutProvider` 接口 | 实现：`ManualPayoutProvider`（人工打款登记） |
 
 ## 5. 功能清单
