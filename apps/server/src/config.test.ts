@@ -10,6 +10,10 @@ const PROD = {
   ZPAY_KEY: 'k',
   WX_APPID: 'wx1',
   WX_APPSECRET: 's',
+  TENCENT_SDKAPPID: '1400000001',
+  TENCENT_SECRETKEY: 'sk',
+  IM_CALLBACK_TOKEN: 'tok',
+  TRTC_CALLBACK_KEY: 'ck',
 };
 
 describe('config', () => {
@@ -37,5 +41,13 @@ describe('config', () => {
 
   test('生产环境配置齐全可启动', () => {
     expect(loadConfig(PROD).cookieSecure).toBe(true);
+  });
+
+  test('腾讯云默认 MOCK，生产环境必须配置齐全', () => {
+    const c = loadConfig({});
+    expect(c.tencent).toEqual({ sdkAppId: 0, secretKey: '', imCallbackToken: '', trtcCallbackKey: '' });
+    expect(c.crisisHotline).toBe('12356');
+    expect(() => loadConfig({ ...PROD, TRTC_CALLBACK_KEY: '' })).toThrow(/TENCENT/);
+    expect(loadConfig(PROD).tencent.sdkAppId).toBe(1400000001);
   });
 });

@@ -12,6 +12,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
 const money = (name: string) => bigint(name, { mode: 'number' });
@@ -231,4 +232,175 @@ export const accruals = pgTable(
     unique('accruals_relation_date_uq').on(t.relationId, t.date),
     index('accruals_teacher_date_idx').on(t.teacherId, t.date),
   ],
+);
+
+export const notificationType = pgEnum('notification_type', [
+  'order_paid',
+  'leave_notice',
+  'substitute_invite',
+  'substitute_response',
+  'substitute_available',
+  'substitute_assigned',
+  'substitute_revoked',
+  'leave_choice',
+  'leave_choice_expired',
+  'appointment_cancelled',
+  'teacher_no_show',
+  'call_confirm_request',
+  'call_disputed',
+  'crisis_alert',
+  'crisis_hotline',
+  'private_trade_warning',
+]);
+
+export const appointmentStatus = pgEnum('appointment_status', ['booked', 'completed', 'cancelled', 'teacher_no_show']);
+
+export const confirmStatus = pgEnum('confirm_status', ['pending', 'confirmed', 'auto', 'disputed']);
+
+export type CancelActor = 'user' | 'teacher' | 'leave' | 'system';
+
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: id(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id),
+    type: notificationType('type').notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+    isRead: boolean('is_read').notNull().default(false),
+    createdAt: createdAt(),
+  },
+  (t) => [index('notifications_user_idx').on(t.userId, t.isRead)],
+);
+
+export const schedules = pgTable(
+  'schedules',
+  {
+    id: id(),
+    teacherId: integer('teacher_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    weekday: integer('weekday').notNull(),
+    startMin: integer('start_min').notNull(),
+    endMin: integer('end_min').notNull(),
+  },
+  (t) => [
+    check('schedule_weekday', sql`${t.weekday} BETWEEN 0 AND 6`),
+    check('schedule_time', sql`${t.startMin} >= 0 AND ${t.endMin} <= 1440 AND ${t.startMin} < ${t.endMin}`),
+  ],
+);
+
+export const appointments = pgTable(
+  'appointments',
+  {
+    id: id(),
+    relationId: integer('relation_id')
+      .notNull()
+      .references(() => serviceRelations.id),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id),
+    teacherId: integer('teacher_id')
+      .notNull()
+      .references(() => users.id),
+    date: day('date').notNull(),
+    startAt: tstz('start_at').notNull(),
+    endAt: tstz('end_at').notNull(),
+    status: appointmentStatus('status').notNull().default('booked'),
+    cancelBy: text('cancel_by').$type<CancelActor>(),
+    teacherJoinedAt: tstz('teacher_joined_at'),
+    userJoinedAt: tstz('user_joined_at'),
+    endedAt: tstz('ended_at'),
+    confirmStatus: confirmStatus('confirm_status'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('appointments_user_idx').on(t.userId, t.startAt),
+    index('appointments_teacher_idx').on(t.teacherId, t.startAt),
+  ],
+);
+
+export const leaves = pgTable('leaves', {
+  id: id(),
+  teacherId: integer('teacher_id')
+    .notNull()
+    .references(() => users.id),
+  startDate: day('start_date').notNull(),
+  endDate: day('end_date').notNull(),
+  reason: text('reason').notNull().default(''),
+  createdAt: createdAt(),
+});
+
+export const substituteCandidates = pgTable('substitute_candidates', {
+  id: id(),
+  leaveId: integer('leave_id')
+    .notNull()
+    .references(() => leaves.id, { onDelete: 'cascade' }),
+  teacherId: integer('teacher_id')
+    .notNull()
+    .references(() => users.id),
+  status: text('status').$type<'invited' | 'accepted' | 'rejected' | 'revoked'>().notNull().default('invited'),
+  respondedAt: tstz('responded_at'),
+});
+
+export const leaveChoices = pgTable('leave_choices', {
+  id: id(),
+  leaveId: integer('leave_id')
+    .notNull()
+    .references(() => leaves.id, { onDelete: 'cascade' }),
+  relationId: integer('relation_id')
+    .notNull()
+    .references(() => serviceRelations.id),
+  status: text('status').$type<'pending' | 'wait' | 'substitute' | 'expired'>().notNull().default('pending'),
+  substituteTeacherId: integer('substitute_teacher_id').references(() => users.id),
+  decidedAt: tstz('decided_at'),
+  deadlineAt: tstz('deadline_at').notNull(),
+});
+
+export const crisisEvents = pgTable('crisis_events', {
+  id: id(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  peerId: integer('peer_id')
+    .notNull()
+    .references(() => users.id),
+  keyword: text('keyword').notNull(),
+  excerpt: text('excerpt').notNull(),
+  status: text('status').$type<'open' | 'handled'>().notNull().default('open'),
+  createdAt: createdAt(),
+});
+
+export const riskEvents = pgTable('risk_events', {
+  id: id(),
+  fromUserId: integer('from_user_id')
+    .notNull()
+    .references(() => users.id),
+  toUserId: integer('to_user_id')
+    .notNull()
+    .references(() => users.id),
+  keyword: text('keyword').notNull(),
+  excerpt: text('excerpt').notNull(),
+  createdAt: createdAt(),
+});
+
+export const replyWaits = pgTable(
+  'reply_waits',
+  {
+    id: id(),
+    teacherId: integer('teacher_id')
+      .notNull()
+      .references(() => users.id),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id),
+    relationId: integer('relation_id')
+      .notNull()
+      .references(() => serviceRelations.id),
+    replyHours: integer('reply_hours').notNull(),
+    askedAt: tstz('asked_at').notNull(),
+    repliedAt: tstz('replied_at'),
+  },
+  (t) => [uniqueIndex('reply_waits_open_uq').on(t.teacherId, t.userId).where(sql`replied_at IS NULL`)],
 );

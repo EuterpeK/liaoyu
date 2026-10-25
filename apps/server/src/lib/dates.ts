@@ -30,3 +30,27 @@ export function previousWeek(today: string): [string, string] {
   const monday = addDays(today, -((dow + 6) % 7));
   return [addDays(monday, -7), addDays(monday, -1)];
 }
+
+export const MINUTE_MS = 60_000;
+export const HOUR_MS = 3_600_000;
+
+export const addMs = (t: Date, ms: number): Date => new Date(t.getTime() + ms);
+
+/** 北京时间 date 日的 minute（自零点起）对应的时刻 */
+export const cnTime = (date: string, minute: number): Date => new Date(parse(date) + minute * MINUTE_MS - CN_OFFSET_MS);
+
+export const weekdayOf = (d: string): number => new Date(parse(d)).getUTCDay();
+
+export function isValidDate(s: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const t = parse(s);
+  return fmt(t) === s;
+}
+
+export const hhmmToMin = (s: string): number => {
+  const [h, m] = s.split(':').map(Number);
+  return h * 60 + m;
+};
+
+export const minToHhmm = (min: number): string =>
+  `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;

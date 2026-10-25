@@ -1,5 +1,18 @@
 import { describe, expect, test } from 'vitest';
-import { addDays, dayStartCN, diffDays, eachDay, formatDateTimeCN, previousWeek, todayCN } from './dates.ts';
+import {
+  addDays,
+  cnTime,
+  dayStartCN,
+  diffDays,
+  eachDay,
+  formatDateTimeCN,
+  hhmmToMin,
+  isValidDate,
+  minToHhmm,
+  previousWeek,
+  todayCN,
+  weekdayOf,
+} from './dates.ts';
 
 describe('dates', () => {
   test('addDays 跨月', () => {
@@ -29,5 +42,22 @@ describe('dates', () => {
   test('previousWeek 返回上周一到上周日', () => {
     expect(previousWeek('2026-11-09')).toEqual(['2026-11-02', '2026-11-08']);
     expect(previousWeek('2026-11-15')).toEqual(['2026-11-02', '2026-11-08']);
+  });
+
+  test('cnTime 与 weekdayOf 按北京时间', () => {
+    expect(cnTime('2026-11-01', 720).toISOString()).toBe('2026-11-01T04:00:00.000Z');
+    expect(cnTime('2026-11-02', 600).toISOString()).toBe('2026-11-02T02:00:00.000Z');
+    expect(weekdayOf('2026-11-01')).toBe(0);
+    expect(weekdayOf('2026-11-02')).toBe(1);
+  });
+
+  test('isValidDate 与时分换算', () => {
+    expect(isValidDate('2026-11-01')).toBe(true);
+    expect(isValidDate('2026-02-30')).toBe(false);
+    expect(isValidDate('20261101')).toBe(false);
+    expect(hhmmToMin('09:30')).toBe(570);
+    expect(hhmmToMin('24:00')).toBe(1440);
+    expect(minToHhmm(570)).toBe('09:30');
+    expect(minToHhmm(1440)).toBe('24:00');
   });
 });

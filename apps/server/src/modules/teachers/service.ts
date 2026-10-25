@@ -44,6 +44,20 @@ export async function requireActiveTeacher(db: DbOrTx, userId: number): Promise<
   return { level: t.level };
 }
 
+/** 锁定老师资料行；mode 决定锁强度，必须全项目统一加锁顺序以避免死锁 */
+export async function lockTeacher(
+  db: DbOrTx,
+  userId: number,
+  mode: 'update' | 'share' = 'update',
+): Promise<{ level: number; status: TeacherStatus } | undefined> {
+  const rows = await db
+    .select({ level: teacherProfiles.level, status: teacherProfiles.status })
+    .from(teacherProfiles)
+    .where(eq(teacherProfiles.userId, userId))
+    .for(mode);
+  return rows[0];
+}
+
 export async function listTeachersForAdmin(db: DbOrTx, fieldKey: string, status?: TeacherStatus) {
   const rows = await db
     .select()

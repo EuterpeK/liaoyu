@@ -20,6 +20,11 @@ const EnvSchema = z
     ZPAY_GATEWAY: z.url().default('https://z-pay.cn'),
     WX_APPID: z.string().default(''),
     WX_APPSECRET: z.string().default(''),
+    TENCENT_SDKAPPID: z.coerce.number().int().positive().default(0),
+    TENCENT_SECRETKEY: z.string().default(''),
+    IM_CALLBACK_TOKEN: z.string().default(''),
+    TRTC_CALLBACK_KEY: z.string().default(''),
+    CRISIS_HOTLINE: z.string().default('12356'),
   })
   .superRefine((e, ctx) => {
     if (e.NODE_ENV !== 'production') return;
@@ -31,6 +36,11 @@ const EnvSchema = z
     need(e.COOKIE_SECURE, 'COOKIE_SECURE', '生产环境必须开启 COOKIE_SECURE');
     need(Boolean(e.ZPAY_PID && e.ZPAY_KEY), 'ZPAY_KEY', '生产环境必须配置 ZPAY_PID/ZPAY_KEY');
     need(Boolean(e.WX_APPID && e.WX_APPSECRET), 'WX_APPSECRET', '生产环境必须配置 WX_APPID/WX_APPSECRET');
+    need(
+      Boolean(e.TENCENT_SDKAPPID && e.TENCENT_SECRETKEY && e.IM_CALLBACK_TOKEN && e.TRTC_CALLBACK_KEY),
+      'TENCENT_SECRETKEY',
+      '生产环境必须配置 TENCENT_SDKAPPID/TENCENT_SECRETKEY/IM_CALLBACK_TOKEN/TRTC_CALLBACK_KEY',
+    );
   });
 
 export function loadConfig(env: Record<string, string | undefined> = process.env) {
@@ -47,6 +57,13 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     cookieSecure: e.COOKIE_SECURE,
     zpay: { pid: e.ZPAY_PID, key: e.ZPAY_KEY, gateway: e.ZPAY_GATEWAY.replace(/\/+$/, '') },
     wx: { appid: e.WX_APPID, secret: e.WX_APPSECRET },
+    tencent: {
+      sdkAppId: e.TENCENT_SDKAPPID,
+      secretKey: e.TENCENT_SECRETKEY,
+      imCallbackToken: e.IM_CALLBACK_TOKEN,
+      trtcCallbackKey: e.TRTC_CALLBACK_KEY,
+    },
+    crisisHotline: e.CRISIS_HOTLINE,
   };
 }
 

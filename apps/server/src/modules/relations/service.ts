@@ -106,3 +106,18 @@ export async function listTeacherStudents(db: DbOrTx, teacherId: number) {
     .where(eq(serviceRelations.teacherId, teacherId))
     .orderBy(asc(serviceRelations.status), asc(serviceRelations.endDate));
 }
+
+export async function getRelation(db: DbOrTx, id: number) {
+  const [r] = await db.select().from(serviceRelations).where(eq(serviceRelations.id, id));
+  return r;
+}
+
+/** 锁定服务关系行；必须全项目统一加锁顺序以避免死锁 */
+export async function lockRelation(db: DbOrTx, id: number) {
+  const [r] = await db
+    .select({ ...getTableColumns(serviceRelations) })
+    .from(serviceRelations)
+    .where(eq(serviceRelations.id, id))
+    .for('update');
+  return r;
+}

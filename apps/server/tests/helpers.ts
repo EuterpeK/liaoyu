@@ -2,9 +2,16 @@ import { eq } from 'drizzle-orm';
 import { buildApp } from '../src/app.ts';
 import { type Config, loadConfig } from '../src/config.ts';
 import type { DbOrTx } from '../src/db/client.ts';
-import { packages, serviceRelations, type TeacherStatus, teacherProfiles, users } from '../src/db/schema.ts';
+import {
+  notifications,
+  packages,
+  serviceRelations,
+  type TeacherStatus,
+  teacherProfiles,
+  users,
+} from '../src/db/schema.ts';
 import { createDeps } from '../src/deps.ts';
-import { fixedClock } from '../src/lib/clock.ts';
+import { type Clock, fixedClock } from '../src/lib/clock.ts';
 import { encryptField } from '../src/lib/crypto.ts';
 import { ADMIN_COOKIE, upsertAdmin } from '../src/modules/admin/service.ts';
 import { createOrder, fulfillOrder } from '../src/modules/orders/service.ts';
@@ -13,6 +20,18 @@ import { TEST_DATABASE_URL } from './test-env.ts';
 
 /** 北京时间 2026-11-01 12:00（周日） */
 export const FIXED_NOW = '2026-11-01T04:00:00Z';
+
+/** 时钟可被测试中途修改；`testClock.set(iso)` 前进时间 */
+export function testClock(iso = FIXED_NOW): Clock & { set(next: string | Date): Date } {
+  let t = new Date(iso).getTime();
+  return {
+    now: () => new Date(t),
+    set(next) {
+      t = new Date(next).getTime();
+      return new Date(t);
+    },
+  };
+}
 
 export function testConfig(override: Partial<Config> = {}): Config {
   const base = loadConfig({ NODE_ENV: 'test', DATABASE_URL: TEST_DATABASE_URL, PUBLIC_BASE_URL: 'http://test.local' });
@@ -119,4 +138,24 @@ export async function buyAndPay(ctx: Ctx, userId: number, packageId: number) {
   await fulfillOrder(ctx.db, ctx.clock, order.outTradeNo, { tradeNo: 'T', paidCents: order.amountCents });
   const [rel] = await ctx.db.select().from(serviceRelations).where(eq(serviceRelations.orderId, order.id));
   return rel;
+}
+
+/** 直接给老师写一份已认证档案（不走申请审核流程），返回该用户的登录态 */
+export async function loginTeacher(
+  ctx: Ctx,
+  code: string,
+  o: { level?: number; status?: TeacherStatus; directions?: string[] } = {},
+) {
+  const userId = await insertTeacher(ctx.db, code, o);
+  const { token } = await loginUser(ctx, code);
+  return { token, userId };
+}
+
+/** 取某用户某种类型的通知（断言用） */
+export async function noticesOf(db: DbOrTx, userId: number, type: string) {
+  return db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.userId, userId))
+    .then((rows) => rows.filter((r) => r.type === type));
 }
