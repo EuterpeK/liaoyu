@@ -8,6 +8,7 @@ import {
   book,
   cancelByTeacher,
   cancelByUser,
+  confirmCall,
   joinCall,
   listForTeacher,
   listForUser,
@@ -46,7 +47,9 @@ export const appointmentRoutes =
       }),
     );
 
-    // 后续 Task 在此追加：确认通话
+    app.post('/:id/confirm', { schema: { ...ById, body: z.object({ ok: z.boolean() }) } }, async (req) =>
+      confirmCall(deps.db, { userId: req.userId, id: req.params.id, ok: req.body.ok }),
+    );
   };
 
 export const teacherAppointmentRoutes =

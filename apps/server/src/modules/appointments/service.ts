@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, getTableColumns, gte, isNotNull, isNull, lte, type SQL, sql } from 'drizzle-orm';
 import type { DbOrTx } from '../../db/client.ts';
 import {
+  accruals,
   appointments,
   type CancelActor,
   leaves,
@@ -394,4 +395,70 @@ export async function autoComplete(db: DbOrTx, now: Date): Promise<number> {
   return n;
 }
 
-// 后续 Task 在此追加：单次确认
+export const CONFIRM_HOURS = 48;
+
+/** 单次套餐：全额计给上课老师并结束服务关系。调用方须在事务中且已锁服务关系行 */
+async function accrueSingle(tx: DbOrTx, a: Appointment): Promise<void> {
+  const [rel] = await tx.select().from(serviceRelations).where(eq(serviceRelations.id, a.relationId));
+  if (!rel || rel.packageType !== 'single') return;
+  await tx
+    .insert(accruals)
+    .values({ relationId: rel.id, date: a.date, teacherId: a.teacherId, amountCents: rel.amountCents })
+    .onConflictDoNothing({ target: [accruals.relationId, accruals.date] });
+  await tx
+    .update(serviceRelations)
+    .set({ status: 'ended' })
+    .where(and(eq(serviceRelations.id, rel.id), eq(serviceRelations.status, 'active')));
+}
+
+/** 待确认 → confirmed/disputed/auto；已不是 pending 时返回 null。调用方须在事务中 */
+async function settleConfirm(
+  tx: DbOrTx,
+  a: Appointment,
+  to: 'confirmed' | 'disputed' | 'auto',
+): Promise<Appointment | null> {
+  await lockRelation(tx, a.relationId);
+  const [row] = await tx
+    .update(appointments)
+    .set({ confirmStatus: to })
+    .where(and(eq(appointments.id, a.id), eq(appointments.status, 'completed'), eq(appointments.confirmStatus, 'pending')))
+    .returning();
+  if (!row) return null;
+  if (to === 'disputed') {
+    await notify(tx, { userId: a.teacherId, type: 'call_disputed', payload: { appointmentId: a.id } });
+  } else {
+    await accrueSingle(tx, row);
+  }
+  return row;
+}
+
+export async function confirmCall(db: DbOrTx, q: { userId: number; id: number; ok: boolean }): Promise<Appointment> {
+  const a = await getAppointment(db, q.id);
+  if (!a || a.userId !== q.userId) throw new HttpError(404, '预约不存在');
+  return db.transaction(async (tx) => {
+    const row = await settleConfirm(tx, a, q.ok ? 'confirmed' : 'disputed');
+    if (!row) throw new HttpError(409, '该通话无需确认');
+    return row;
+  });
+}
+
+export async function autoConfirm(db: DbOrTx, now: Date): Promise<number> {
+  const cutoff = addMs(now, -CONFIRM_HOURS * HOUR_MS);
+  const rows = await db
+    .select()
+    .from(appointments)
+    .where(
+      and(
+        eq(appointments.status, 'completed'),
+        eq(appointments.confirmStatus, 'pending'),
+        lte(appointments.endedAt, cutoff),
+      ),
+    )
+    .orderBy(asc(appointments.id));
+  let n = 0;
+  for (const a of rows) {
+    // biome-ignore lint/performance/noAwaitInLoops: 逐条独立事务
+    if (await db.transaction((tx) => settleConfirm(tx, a, 'auto'))) n += 1;
+  }
+  return n;
+}
