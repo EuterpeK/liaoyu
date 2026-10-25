@@ -9,6 +9,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { Deps } from './deps.ts';
 import { adminAuthRoutes } from './modules/admin/routes.ts';
 import { authRoutes } from './modules/auth/routes.ts';
+import { notificationRoutes } from './modules/notifications/routes.ts';
 import { adminOrderRoutes } from './modules/orders/admin-routes.ts';
 import { orderRoutes } from './modules/orders/routes.ts';
 import { teacherPackageRoutes } from './modules/packages/routes.ts';
@@ -38,6 +39,7 @@ export async function registerRoutes(app: App, deps: Deps): Promise<void> {
   await app.register(adminOrderRoutes(deps), { prefix: '/api/admin' });
   await app.register(payRoutes(deps), { prefix: '/api/pay' });
   await app.register(relationRoutes(deps), { prefix: '/api/relations' });
+  await app.register(notificationRoutes(deps), { prefix: '/api/notifications' });
   await app.register(teacherStudentRoutes(deps), { prefix: '/api/teacher/students' });
   await app.register(adminSettlementRoutes(deps), { prefix: '/api/admin' });
 }
