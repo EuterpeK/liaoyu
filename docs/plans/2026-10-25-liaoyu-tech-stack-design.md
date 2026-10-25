@@ -118,4 +118,4 @@ PostgreSQL 事务是异步、真并发的，不能假设单写者串行。统一
 
 ## 10. 对已有实施计划的影响
 
-`2026-10-24-liaoyu-phase1-backend-core.md`、`2026-10-24-liaoyu-phase2-service-delivery.md` 基于 Express + SQLite + JS，业务拆解与测试用例可复用，代码需按本文技术栈重写；尤其同步事务、`setInterval` 调度需改为第 6、7 节方案。
+`archive/2026-10-24-liaoyu-phase1-backend-core.md`、`archive/2026-10-24-liaoyu-phase2-service-delivery.md` 基于 Express + SQLite + JS，已分别由 `2026-10-25-liaoyu-phase1-backend-core-ts.md`、`2026-10-25-liaoyu-phase2-service-delivery-ts.md` 按本文技术栈重写替代（同步事务、`setInterval` 调度已按第 6、7 节方案改写）。
