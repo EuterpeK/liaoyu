@@ -74,3 +74,83 @@ export function activeDayIndex(segments: readonly Segment[], date: string): numb
   }
   return n;
 }
+
+export type DayPredicate = (date: string) => boolean;
+
+const NEVER: DayPredicate = () => false;
+
+export const inRange =
+  (from: string, to: string): DayPredicate =>
+  (d) =>
+    d >= from && d <= to;
+
+const countActive = (days: readonly Day[]): number => days.filter((d) => d.kind !== 'paused').length;
+
+/** 调整尾部，让非暂停天数恢复为 span：多了从尾部裁掉；少了在尾部补原老师正常日（遇到 blocked 日补暂停日） */
+function fitSpan(days: readonly Day[], span: number, ownerId: number, blocked: DayPredicate): Day[] {
+  const out = days.slice();
+  let active = countActive(out);
+  while (active > span) {
+    const d = out.pop();
+    if (d && d.kind !== 'paused') active -= 1;
+  }
+  while (active < span) {
+    const last = out.at(-1);
+    if (!last) throw new Error('分段不能为空');
+    const date = addDays(last.date, 1);
+    if (blocked(date)) {
+      out.push({ date, kind: 'paused', teacherId: null });
+    } else {
+      out.push({ date, kind: 'normal', teacherId: ownerId });
+      active += 1;
+    }
+  }
+  while (out.at(-1)?.kind === 'paused') out.pop();
+  return out;
+}
+
+export interface LeaveWindow {
+  from: string;
+  to: string;
+  /** 原老师（服务关系的购买对象） */
+  ownerId: number;
+  /** 原老师的请假日，尾部补齐时跳过 */
+  blocked?: DayPredicate;
+}
+
+interface RemapOptions extends LeaveWindow {
+  match: (d: Day) => boolean;
+  into: Pick<Day, 'kind' | 'teacherId'>;
+}
+
+function remap(
+  segments: readonly Segment[],
+  { from, to, match, into, ownerId, blocked = NEVER }: RemapOptions,
+): Segment[] {
+  const days = expand(segments);
+  const span = countActive(days);
+  const mapped = days.map((d) => (d.date >= from && d.date <= to && match(d) ? { ...d, ...into } : d));
+  return compress(fitSpan(mapped, span, ownerId, blocked));
+}
+
+export const pauseRange = (segments: readonly Segment[], w: LeaveWindow): Segment[] =>
+  remap(segments, {
+    ...w,
+    blocked: w.blocked ?? inRange(w.from, w.to),
+    match: (d) => d.kind === 'normal' && d.teacherId === w.ownerId,
+    into: { kind: 'paused', teacherId: null },
+  });
+
+export const substituteFromPause = (segments: readonly Segment[], w: LeaveWindow & { teacherId: number }): Segment[] =>
+  remap(segments, {
+    ...w,
+    match: (d) => d.kind === 'paused',
+    into: { kind: 'substitute', teacherId: w.teacherId },
+  });
+
+export const pauseFromSubstitute = (segments: readonly Segment[], w: LeaveWindow & { teacherId: number }): Segment[] =>
+  remap(segments, {
+    ...w,
+    match: (d) => d.kind === 'substitute' && d.teacherId === w.teacherId,
+    into: { kind: 'paused', teacherId: null },
+  });
