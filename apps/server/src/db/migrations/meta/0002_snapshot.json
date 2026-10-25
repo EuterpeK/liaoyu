@@ -1,5 +1,5 @@
 {
-  "id": "fd747f95-a75d-48fe-abda-d8f0f0d2df78",
+  "id": "6e97a919-6ede-46d1-877a-f75ee6a49bc3",
   "prevId": "e80e6cf6-957c-4a52-abb0-208382a3c5dc",
   "version": "7",
   "dialect": "postgresql",
@@ -2253,6 +2253,7 @@
       "schema": "public",
       "values": [
         "order_paid",
+        "appointment_booked",
         "leave_notice",
         "substitute_invite",
         "substitute_response",

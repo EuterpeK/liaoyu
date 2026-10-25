@@ -1,6 +1,6 @@
 {
-  "id": "b9d0d916-ac0d-4624-a0ef-41d60215bbd5",
-  "prevId": "fd747f95-a75d-48fe-abda-d8f0f0d2df78",
+  "id": "6e33df81-77ea-425d-b05b-625988aa48d7",
+  "prevId": "6e97a919-6ede-46d1-877a-f75ee6a49bc3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2253,6 +2253,7 @@
       "schema": "public",
       "values": [
         "order_paid",
+        "appointment_booked",
         "leave_notice",
         "substitute_invite",
         "substitute_response",

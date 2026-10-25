@@ -236,6 +236,7 @@ export const accruals = pgTable(
 
 export const notificationType = pgEnum('notification_type', [
   'order_paid',
+  'appointment_booked',
   'leave_notice',
   'substitute_invite',
   'substitute_response',

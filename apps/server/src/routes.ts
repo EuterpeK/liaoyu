@@ -8,13 +8,16 @@ import type {
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { Deps } from './deps.ts';
 import { adminAuthRoutes } from './modules/admin/routes.ts';
+import { appointmentRoutes, teacherAppointmentRoutes } from './modules/appointments/routes.ts';
 import { authRoutes } from './modules/auth/routes.ts';
+import { substituteInviteRoutes, teacherLeaveRoutes } from './modules/leaves/routes.ts';
 import { notificationRoutes } from './modules/notifications/routes.ts';
 import { adminOrderRoutes } from './modules/orders/admin-routes.ts';
 import { orderRoutes } from './modules/orders/routes.ts';
 import { teacherPackageRoutes } from './modules/packages/routes.ts';
 import { payRoutes } from './modules/pay/routes.ts';
 import { relationRoutes, teacherStudentRoutes } from './modules/relations/routes.ts';
+import { teacherScheduleRoutes } from './modules/schedule/routes.ts';
 import { adminSettlementRoutes } from './modules/settlement/admin-routes.ts';
 import { adminTeacherRoutes } from './modules/teachers/admin-routes.ts';
 import { publicTeacherRoutes } from './modules/teachers/public-routes.ts';
@@ -32,6 +35,11 @@ export async function registerRoutes(app: App, deps: Deps): Promise<void> {
   await app.register(authRoutes(deps), { prefix: '/api/auth' });
   await app.register(adminAuthRoutes(deps), { prefix: '/api/admin' });
   await app.register(teacherRoutes(deps), { prefix: '/api/teacher' });
+  await app.register(teacherScheduleRoutes(deps), { prefix: '/api/teacher/schedule' });
+  await app.register(appointmentRoutes(deps), { prefix: '/api/appointments' });
+  await app.register(teacherAppointmentRoutes(deps), { prefix: '/api/teacher/appointments' });
+  await app.register(teacherLeaveRoutes(deps), { prefix: '/api/teacher/leaves' });
+  await app.register(substituteInviteRoutes(deps), { prefix: '/api/teacher/substitute-invites' });
   await app.register(teacherPackageRoutes(deps), { prefix: '/api/teacher/packages' });
   await app.register(adminTeacherRoutes(deps), { prefix: '/api/admin/teachers' });
   await app.register(publicTeacherRoutes(deps), { prefix: '/api/teachers' });

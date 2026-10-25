@@ -1,6 +1,6 @@
 CREATE TYPE "public"."appointment_status" AS ENUM('booked', 'completed', 'cancelled', 'teacher_no_show');--> statement-breakpoint
 CREATE TYPE "public"."confirm_status" AS ENUM('pending', 'confirmed', 'auto', 'disputed');--> statement-breakpoint
-CREATE TYPE "public"."notification_type" AS ENUM('order_paid', 'leave_notice', 'substitute_invite', 'substitute_response', 'substitute_available', 'substitute_assigned', 'substitute_revoked', 'leave_choice', 'leave_choice_expired', 'appointment_cancelled', 'teacher_no_show', 'call_confirm_request', 'call_disputed', 'crisis_alert', 'crisis_hotline', 'private_trade_warning');--> statement-breakpoint
+CREATE TYPE "public"."notification_type" AS ENUM('order_paid', 'appointment_booked', 'leave_notice', 'substitute_invite', 'substitute_response', 'substitute_available', 'substitute_assigned', 'substitute_revoked', 'leave_choice', 'leave_choice_expired', 'appointment_cancelled', 'teacher_no_show', 'call_confirm_request', 'call_disputed', 'crisis_alert', 'crisis_hotline', 'private_trade_warning');--> statement-breakpoint
 CREATE TABLE "appointments" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "appointments_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"relation_id" integer NOT NULL,

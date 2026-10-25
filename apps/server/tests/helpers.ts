@@ -146,8 +146,8 @@ export async function loginTeacher(
   code: string,
   o: { level?: number; status?: TeacherStatus; directions?: string[] } = {},
 ) {
-  const userId = await insertTeacher(ctx.db, code, o);
-  const { token } = await loginUser(ctx, code);
+  const { userId, token } = await loginUser(ctx, code);
+  await makeTeacherProfile(ctx.db, userId, o);
   return { token, userId };
 }
 
