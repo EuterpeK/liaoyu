@@ -4,7 +4,15 @@ import type { Deps } from '../../deps.ts';
 import { DateStr, HhMm, IdParam } from '../../lib/zod.ts';
 import { userGuard } from '../auth/guards.ts';
 import { teacherGuard } from '../teachers/guard.ts';
-import { book, cancelByTeacher, cancelByUser, listForTeacher, listForUser, slotsForRelation } from './service.ts';
+import {
+  book,
+  cancelByTeacher,
+  cancelByUser,
+  joinCall,
+  listForTeacher,
+  listForUser,
+  slotsForRelation,
+} from './service.ts';
 
 const ById = { params: z.object({ id: IdParam }) };
 
@@ -30,7 +38,15 @@ export const appointmentRoutes =
       cancelByUser(deps.db, deps.clock.now(), { userId: req.userId, id: req.params.id }),
     );
 
-    // 后续 Task 在此追加：进入通话、确认通话
+    app.post('/:id/join', { schema: ById }, async (req) =>
+      joinCall(deps.db, deps.clock.now(), deps.config.tencent, {
+        userId: req.userId,
+        id: req.params.id,
+        asTeacher: false,
+      }),
+    );
+
+    // 后续 Task 在此追加：确认通话
   };
 
 export const teacherAppointmentRoutes =
@@ -44,5 +60,11 @@ export const teacherAppointmentRoutes =
       cancelByTeacher(deps.db, deps.clock.now(), { teacherId: req.userId, id: req.params.id }),
     );
 
-    // 后续 Task 在此追加：老师进入通话
+    app.post('/:id/join', { schema: ById }, async (req) =>
+      joinCall(deps.db, deps.clock.now(), deps.config.tencent, {
+        userId: req.userId,
+        id: req.params.id,
+        asTeacher: true,
+      }),
+    );
   };

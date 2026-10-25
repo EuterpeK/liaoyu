@@ -21,6 +21,9 @@ import { TEST_DATABASE_URL } from './test-env.ts';
 /** 北京时间 2026-11-01 12:00（周日） */
 export const FIXED_NOW = '2026-11-01T04:00:00Z';
 
+/** 「真实模式」腾讯云配置；各测试按需覆盖回调 Token / 密钥 */
+export const TENCENT = { sdkAppId: 1400000001, secretKey: 'sk-test', imCallbackToken: '', trtcCallbackKey: '' };
+
 /** 时钟可被测试中途修改；`testClock.set(iso)` 前进时间 */
 export function testClock(iso = FIXED_NOW): Clock & { set(next: string | Date): Date } {
   let t = new Date(iso).getTime();
@@ -42,7 +45,7 @@ export async function setup(opts: { config?: Partial<Config>; now?: string } = {
   const db = testDb();
   await resetDb(db);
   const config = testConfig(opts.config);
-  const clock = fixedClock(opts.now ?? FIXED_NOW);
+  const clock = testClock(opts.now ?? FIXED_NOW);
   const deps = createDeps({ config, clock, db });
   const app = await buildApp(deps);
   return { db, config, clock, deps, app };

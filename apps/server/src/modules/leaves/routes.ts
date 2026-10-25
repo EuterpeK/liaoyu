@@ -2,8 +2,18 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { Deps } from '../../deps.ts';
 import { DateStr, IdParam } from '../../lib/zod.ts';
+import { userGuard } from '../auth/guards.ts';
 import { teacherGuard } from '../teachers/guard.ts';
-import { createLeave, listInvites, listLeaves, MAX_CANDIDATES, respondInvite } from './service.ts';
+import {
+  createLeave,
+  decideChoice,
+  listChoices,
+  listInvites,
+  listLeaves,
+  MAX_CANDIDATES,
+  respondInvite,
+  revokeSubstitute,
+} from './service.ts';
 
 const LeaveBody = z.object({
   startDate: DateStr,
@@ -23,7 +33,16 @@ export const teacherLeaveRoutes =
 
     app.get('/', async (req) => listLeaves(deps.db, req.userId));
 
-    // 后续 Task 在此追加：撤销代班
+    app.post(
+      '/:id/candidates/:teacherId/revoke',
+      { schema: { params: z.object({ id: IdParam, teacherId: IdParam }) } },
+      async (req) =>
+        revokeSubstitute(deps.db, deps.clock.now(), {
+          teacherId: req.userId,
+          leaveId: req.params.id,
+          candidateId: req.params.teacherId,
+        }),
+    );
   };
 
 export const substituteInviteRoutes =
@@ -42,5 +61,22 @@ export const substituteInviteRoutes =
           leaveId: req.params.leaveId,
           accept: req.body.accept,
         }),
+    );
+  };
+
+const Decision = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('wait') }),
+  z.object({ action: z.literal('substitute'), teacherId: z.number().int().positive() }),
+]);
+
+export const leaveChoiceRoutes =
+  (deps: Deps): FastifyPluginAsyncZod =>
+  async (app) => {
+    app.addHook('preHandler', userGuard(deps));
+
+    app.get('/', async (req) => listChoices(deps.db, req.userId));
+
+    app.post('/:id', { schema: { params: z.object({ id: IdParam }), body: Decision } }, async (req) =>
+      decideChoice(deps.db, deps.clock.now(), { userId: req.userId, choiceId: req.params.id, ...req.body }),
     );
   };
