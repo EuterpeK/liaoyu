@@ -1,6 +1,6 @@
-import { and, asc, eq, max, ne } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, max, ne } from 'drizzle-orm';
 import type { DbOrTx } from '../../db/client.ts';
-import { type orders, serviceRelations, serviceSegments } from '../../db/schema.ts';
+import { type orders, serviceRelations, serviceSegments, teacherProfiles, users } from '../../db/schema.ts';
 import { initialSegments, type Segment } from '../../domain/segments.ts';
 import { addDays } from '../../lib/dates.ts';
 import { HttpError } from '../../lib/errors.ts';
@@ -87,4 +87,22 @@ export async function createRelationForOrder(tx: DbOrTx, order: Order, today: st
     .returning({ id: serviceRelations.id });
   await replaceSegments(tx, rel.id, initialSegments(order.teacherId, start, end));
   return rel.id;
+}
+
+export async function listUserRelations(db: DbOrTx, userId: number) {
+  return db
+    .select({ ...getTableColumns(serviceRelations), teacherName: teacherProfiles.displayName })
+    .from(serviceRelations)
+    .innerJoin(teacherProfiles, eq(teacherProfiles.userId, serviceRelations.teacherId))
+    .where(eq(serviceRelations.userId, userId))
+    .orderBy(desc(serviceRelations.id));
+}
+
+export async function listTeacherStudents(db: DbOrTx, teacherId: number) {
+  return db
+    .select({ ...getTableColumns(serviceRelations), userNickname: users.nickname })
+    .from(serviceRelations)
+    .innerJoin(users, eq(users.id, serviceRelations.userId))
+    .where(eq(serviceRelations.teacherId, teacherId))
+    .orderBy(asc(serviceRelations.status), asc(serviceRelations.endDate));
 }
