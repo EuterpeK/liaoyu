@@ -1,0 +1,57 @@
+import { describe, expect, test } from 'vitest';
+import { adminCookie, call, loginUser, setup } from '../../../tests/helpers.ts';
+import { buildApp } from '../../app.ts';
+import { auditLogs } from '../../db/schema.ts';
+import { createDeps } from '../../deps.ts';
+import { fixedClock } from '../../lib/clock.ts';
+import { ADMIN_COOKIE, upsertAdmin } from './service.ts';
+
+describe('管理员登录', () => {
+  test('密码错误返回 401', async () => {
+    const ctx = await setup();
+    await upsertAdmin(ctx.db, 'boss', 'password-123');
+    const res = await call(ctx, 'POST', '/api/admin/login', { body: { username: 'boss', password: 'wrong' } });
+    expect(res.statusCode).toBe(401);
+  });
+
+  test('登录下发安全 Cookie，凭 Cookie 访问 /me', async () => {
+    const ctx = await setup();
+    await upsertAdmin(ctx.db, 'boss', 'password-123');
+    const login = await call(ctx, 'POST', '/api/admin/login', { body: { username: 'boss', password: 'password-123' } });
+    expect(login.statusCode).toBe(200);
+    const c = login.cookies.find((x) => x.name === ADMIN_COOKIE);
+    expect(c?.httpOnly).toBe(true);
+    expect(c?.sameSite).toBe('Strict');
+    expect(c?.path).toBe('/api/admin');
+
+    const me = await call(ctx, 'GET', '/api/admin/me', { cookie: `${ADMIN_COOKIE}=${c?.value}` });
+    expect(me.json().username).toBe('boss');
+  });
+
+  test('用户 token 不能访问管理接口', async () => {
+    const ctx = await setup();
+    const { token } = await loginUser(ctx, 'u1');
+    expect((await call(ctx, 'GET', '/api/admin/me', { token })).statusCode).toBe(401);
+  });
+
+  test('登出后会话失效', async () => {
+    const ctx = await setup();
+    const cookie = await adminCookie(ctx);
+    await call(ctx, 'POST', '/api/admin/logout', { cookie });
+    expect((await call(ctx, 'GET', '/api/admin/me', { cookie })).statusCode).toBe(401);
+  });
+
+  test('会话 12 小时后过期', async () => {
+    const ctx = await setup();
+    const cookie = await adminCookie(ctx);
+    const later = await buildApp(createDeps({ ...ctx.deps, clock: fixedClock('2026-11-01T16:00:01Z') }));
+    expect((await call({ app: later }, 'GET', '/api/admin/me', { cookie })).statusCode).toBe(401);
+  });
+
+  test('登录写审计日志', async () => {
+    const ctx = await setup();
+    await adminCookie(ctx);
+    const logs = await ctx.db.select().from(auditLogs);
+    expect(logs.map((l) => l.action)).toEqual(['admin.login']);
+  });
+});
