@@ -75,9 +75,9 @@ describe('数据库约束', () => {
   test('暂停分段不能有老师，其他分段必须有老师', async () => {
     const { db, teacherId, relationId } = await seedRelation();
     const base = { relationId, startDate: '2026-11-01', endDate: '2026-11-02' };
-    expect(
-      (await pgError(db.insert(serviceSegments).values({ ...base, kind: 'paused', teacherId }))).constraint,
-    ).toBe('segment_teacher');
+    expect((await pgError(db.insert(serviceSegments).values({ ...base, kind: 'paused', teacherId }))).constraint).toBe(
+      'segment_teacher',
+    );
     expect(
       (await pgError(db.insert(serviceSegments).values({ ...base, kind: 'normal', teacherId: null }))).constraint,
     ).toBe('segment_teacher');

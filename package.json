@@ -2,7 +2,9 @@
   "name": "liaoyu",
   "private": true,
   "packageManager": "pnpm@10.34.8",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "check": "biome check . && pnpm -r typecheck && pnpm -r test",
     "fix": "biome check --write .",
@@ -11,5 +13,24 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.3"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": [
+        "current",
+        "linux"
+      ],
+      "cpu": [
+        "current",
+        "x64"
+      ],
+      "libc": [
+        "current",
+        "musl"
+      ]
+    },
+    "overrides": {
+      "@biomejs/cli-linux-x64": "npm:@biomejs/cli-linux-x64-musl@2.6.3"
+    }
   }
 }
