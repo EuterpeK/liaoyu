@@ -1,0 +1,58 @@
+name: liaoyu
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: liaoyu
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请在 deploy/.env 设置 POSTGRES_PASSWORD}
+      POSTGRES_DB: liaoyu
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U liaoyu -d liaoyu"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  server:
+    build:
+      context: ..
+      dockerfile: apps/server/Dockerfile
+    image: liaoyu-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "8700"
+      DATABASE_URL: postgres://liaoyu:${POSTGRES_PASSWORD}@postgres:5432/liaoyu
+      PUBLIC_BASE_URL: https://${DOMAIN:?请设置 DOMAIN}
+      JWT_SECRET: ${JWT_SECRET:?请设置 JWT_SECRET}
+      FIELD_KEY: ${FIELD_KEY:?请设置 FIELD_KEY}
+      COOKIE_SECURE: "true"
+      ZPAY_PID: ${ZPAY_PID:?请设置 ZPAY_PID}
+      ZPAY_KEY: ${ZPAY_KEY:?请设置 ZPAY_KEY}
+      WX_APPID: ${WX_APPID:?请设置 WX_APPID}
+      WX_APPSECRET: ${WX_APPSECRET:?请设置 WX_APPSECRET}
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

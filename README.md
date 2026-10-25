@@ -30,3 +30,27 @@ pnpm check    # Biome + tsc + Vitest（需先 pnpm db:up）
 - `apps/server/src/domain/*`：纯函数（分段改写等），不碰数据库
 - `apps/server/src/jobs/*`：pg-boss 定时任务
 - `deploy/`：开发与生产的 Docker Compose、Caddy、备份脚本
+
+## 生产部署（腾讯云轻量服务器）
+
+前置：域名已 ICP 备案并解析到服务器；安装 Docker 与 [coscli](https://cloud.tencent.com/document/product/436/63143)。
+
+```bash
+git clone <repo> /opt/liaoyu && cd /opt/liaoyu/deploy
+cp .env.example .env && vi .env          # 填写全部变量
+docker compose up -d --build
+docker compose exec server node src/scripts/create-admin.ts boss '<至少10位强密码>'
+curl -s https://$DOMAIN/api/health        # {"ok":true}
+chmod +x backup.sh && crontab -e          # 0 4 * * * /opt/liaoyu/deploy/backup.sh >> /var/log/liaoyu-backup.log 2>&1
+```
+
+- 升级：`git pull && docker compose up -d --build server`（启动时自动执行数据库迁移）。
+- 小程序后台把 `https://$DOMAIN` 加入 request 合法域名；ZPAY 后台无需配置回调地址（随下单参数传递）。
+- 恢复演练（每月一次）：
+
+```bash
+docker compose exec -T postgres createdb -U liaoyu liaoyu_restore
+docker compose exec -T postgres pg_restore -U liaoyu -d liaoyu_restore --no-owner < /var/backups/liaoyu/<文件>.dump
+docker compose exec -T postgres psql -U liaoyu -d liaoyu_restore -c 'SELECT COUNT(*) FROM orders'
+docker compose exec -T postgres dropdb -U liaoyu liaoyu_restore
+```
