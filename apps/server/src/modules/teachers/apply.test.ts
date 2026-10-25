@@ -3,7 +3,13 @@ import { describe, expect, test } from 'vitest';
 import { adminCookie, call, loginUser, setup } from '../../../tests/helpers.ts';
 import { auditLogs, teacherProfiles } from '../../db/schema.ts';
 
-const APPLY = { displayName: '小林老师', realName: '林某', intro: '十年情感咨询', directions: ['情感'], credentials: ['证书A'] };
+const APPLY = {
+  displayName: '小林老师',
+  realName: '林某',
+  intro: '十年情感咨询',
+  directions: ['情感'],
+  credentials: ['证书A'],
+};
 
 describe('老师入驻与审核', () => {
   test('入驻申请 → 待审核，重复申请 409', async () => {
@@ -64,8 +70,8 @@ describe('老师入驻与审核', () => {
     const cookie = await adminCookie(ctx);
     await call(ctx, 'POST', `/api/admin/teachers/${userId}/review`, { cookie, body: { approve: false } });
     expect((await call(ctx, 'POST', '/api/teacher/apply', { token, body: APPLY })).statusCode).toBe(201);
-    expect((await call(ctx, 'POST', '/api/admin/teachers/999/review', { cookie, body: { approve: false } })).statusCode).toBe(
-      404,
-    );
+    expect(
+      (await call(ctx, 'POST', '/api/admin/teachers/999/review', { cookie, body: { approve: false } })).statusCode,
+    ).toBe(404);
   });
 });

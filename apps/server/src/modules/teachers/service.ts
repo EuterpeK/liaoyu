@@ -1,6 +1,6 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, arrayContains, asc, desc, eq, sql } from 'drizzle-orm';
 import type { DbOrTx } from '../../db/client.ts';
-import { type TeacherStatus, teacherProfiles } from '../../db/schema.ts';
+import { packages, type TeacherStatus, teacherProfiles } from '../../db/schema.ts';
 import type { Clock } from '../../lib/clock.ts';
 import { decryptField, encryptField } from '../../lib/crypto.ts';
 import { HttpError } from '../../lib/errors.ts';
@@ -26,7 +26,11 @@ export async function applyTeacher(db: DbOrTx, fieldKey: string, userId: number,
   const rows = await db
     .insert(teacherProfiles)
     .values({ userId, ...values })
-    .onConflictDoUpdate({ target: teacherProfiles.userId, set: values, setWhere: eq(teacherProfiles.status, 'rejected') })
+    .onConflictDoUpdate({
+      target: teacherProfiles.userId,
+      set: values,
+      setWhere: eq(teacherProfiles.status, 'rejected'),
+    })
     .returning({ userId: teacherProfiles.userId });
   if (rows.length === 0) throw new HttpError(409, '已提交过入驻申请');
 }
@@ -49,12 +53,7 @@ export async function listTeachersForAdmin(db: DbOrTx, fieldKey: string, status?
   return rows.map(({ realNameEnc, ...rest }) => ({ ...rest, realName: decryptField(fieldKey, realNameEnc) }));
 }
 
-export async function reviewTeacher(
-  db: DbOrTx,
-  clock: Clock,
-  userId: number,
-  d: { approve: boolean; level?: number },
-) {
+export async function reviewTeacher(db: DbOrTx, clock: Clock, userId: number, d: { approve: boolean; level?: number }) {
   if (d.approve && (d.level === undefined || d.level < 1 || d.level > 3)) throw new HttpError(400, '初始等级须为 1~3');
   const set = d.approve
     ? { status: 'active' as const, level: d.level, reviewedAt: clock.now() }
@@ -70,4 +69,54 @@ export async function reviewTeacher(
     .from(teacherProfiles)
     .where(eq(teacherProfiles.userId, userId));
   throw exists ? new HttpError(409, '该申请不在待审核状态') : new HttpError(404, '申请不存在');
+}
+
+const minPriceCents = sql<number | null>`(
+  SELECT MIN(${packages.priceCents}) FROM ${packages}
+  WHERE ${packages.teacherId} = ${teacherProfiles.userId} AND ${packages.onSale}
+)`;
+
+const publicColumns = {
+  id: teacherProfiles.userId,
+  displayName: teacherProfiles.displayName,
+  intro: teacherProfiles.intro,
+  directions: teacherProfiles.directions,
+  level: teacherProfiles.level,
+  minPriceCents,
+};
+
+export async function listPublicTeachers(db: DbOrTx, f: { direction?: string; level?: number }) {
+  return db
+    .select(publicColumns)
+    .from(teacherProfiles)
+    .where(
+      and(
+        eq(teacherProfiles.status, 'active'),
+        f.direction ? arrayContains(teacherProfiles.directions, [f.direction]) : undefined,
+        f.level ? eq(teacherProfiles.level, f.level) : undefined,
+      ),
+    )
+    .orderBy(desc(teacherProfiles.level), asc(teacherProfiles.userId));
+}
+
+export async function getPublicTeacher(db: DbOrTx, id: number) {
+  const [t] = await db
+    .select(publicColumns)
+    .from(teacherProfiles)
+    .where(and(eq(teacherProfiles.userId, id), eq(teacherProfiles.status, 'active')));
+  if (!t) throw new HttpError(404, '老师不存在');
+  const pkgs = await db
+    .select({
+      id: packages.id,
+      type: packages.type,
+      title: packages.title,
+      priceCents: packages.priceCents,
+      days: packages.days,
+      callQuota: packages.callQuota,
+      replyHours: packages.replyHours,
+    })
+    .from(packages)
+    .where(and(eq(packages.teacherId, id), eq(packages.onSale, true)))
+    .orderBy(asc(packages.priceCents));
+  return { ...t, packages: pkgs };
 }
