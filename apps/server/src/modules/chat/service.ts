@@ -1,10 +1,21 @@
 import { and, asc, eq, gte, inArray, lte } from 'drizzle-orm';
 import { z } from 'zod';
 import type { DbOrTx } from '../../db/client.ts';
-import { serviceRelations, serviceSegments, teacherProfiles, users } from '../../db/schema.ts';
+import {
+  crisisEvents,
+  riskEvents,
+  serviceRelations,
+  serviceSegments,
+  teacherProfiles,
+  users,
+} from '../../db/schema.ts';
+import { scanText } from '../../domain/keywords.ts';
 import { segmentOn } from '../../domain/segments.ts';
+import { todayCN } from '../../lib/dates.ts';
+import { type Notice, notify } from '../../lib/notify.ts';
 import { imIdOf } from '../../providers/tencent.ts';
 import { loadSegments } from '../relations/service.ts';
+import { onMessage } from './replies.ts';
 
 type Relation = typeof serviceRelations.$inferSelect;
 
@@ -122,4 +133,35 @@ export function textOf(msgBody: unknown): string {
     .join('\n');
 }
 
-// 后续 Task 在此追加：发送后处理（关键词、回复时效）
+const EXCERPT_CHARS = 200;
+
+export async function handleAfterSend(
+  db: DbOrTx,
+  m: { from: number; to: number; text: string; now: Date; hotline: string },
+): Promise<void> {
+  const pair = await resolvePair(db, m.from, m.to, todayCN(m.now));
+  if (!pair) return;
+  const excerpt = [...m.text].slice(0, EXCERPT_CHARS).join('');
+  const { crisis, privateTrade } = scanText(m.text);
+  await db.transaction(async (tx) => {
+    const notices: Notice[] = [];
+    if (crisis) {
+      const [e] = await tx
+        .insert(crisisEvents)
+        .values({ userId: m.from, peerId: m.to, keyword: crisis, excerpt, createdAt: m.now })
+        .returning({ id: crisisEvents.id });
+      notices.push(
+        { userId: m.from, type: 'crisis_hotline', payload: { hotline: m.hotline } },
+        { userId: m.to, type: 'crisis_alert', payload: { eventId: e.id, fromUserId: m.from } },
+      );
+    }
+    if (privateTrade) {
+      await tx
+        .insert(riskEvents)
+        .values({ fromUserId: m.from, toUserId: m.to, keyword: privateTrade, excerpt, createdAt: m.now });
+      notices.push({ userId: m.from, type: 'private_trade_warning', payload: { keyword: privateTrade } });
+    }
+    await onMessage(tx, pair, m.from, m.now);
+    await notify(tx, ...notices);
+  });
+}

@@ -14,7 +14,12 @@ async function world(pkg: Partial<typeof packages.$inferInsert> = SINGLE) {
   const u = await loginUser(ctx, 'u');
   await setSchedule(ctx.db, t.userId, [{ weekday: 1, start: '09:00', end: '12:00' }]);
   const rel = await buyAndPay(ctx, u.userId, await insertPackage(ctx.db, t.userId, pkg));
-  const a = await book(ctx.db, ctx.clock.now(), { userId: u.userId, relationId: rel.id, date: '2026-11-02', start: '10:00' });
+  const a = await book(ctx.db, ctx.clock.now(), {
+    userId: u.userId,
+    relationId: rel.id,
+    date: '2026-11-02',
+    start: '10:00',
+  });
   await recordEnter(ctx.db, a.id, t.userId, a.startAt);
   await recordEnter(ctx.db, a.id, u.userId, a.startAt);
   const ended = addMs(a.startAt, 50 * MINUTE_MS);

@@ -32,7 +32,7 @@ type World = Awaited<ReturnType<typeof world>>;
 
 const substituteOn = (w: World, date: string) =>
   rewriteSegments(w.db, w.rel.id, (segs) => applySubstitute(segs, { from: date, to: date, teacherId: w.s.userId }));
-const before = (w: World, from: string, to: string, query?: Record<string, string>) =>
+const beforeSend = (w: World, from: string, to: string, query?: Record<string, string>) =>
   call(w.ctx, 'POST', '/api/im/callback', {
     query: { SdkAppid: '1400000001', CallbackCommand: 'C2C.CallbackBeforeSendMsg', ...query },
     body: {
@@ -74,13 +74,13 @@ describe('聊天权限', () => {
 describe('IM 回调与联系人', () => {
   test('发送前回调：有权限放行、无权限拦截、系统账号放行', async () => {
     const w = await world();
-    expect((await before(w, `u${w.u.userId}`, `u${w.t.userId}`)).json()).toEqual({
+    expect((await beforeSend(w, `u${w.u.userId}`, `u${w.t.userId}`)).json()).toEqual({
       ActionStatus: 'OK',
       ErrorCode: 0,
       ErrorInfo: '',
     });
-    expect((await before(w, `u${w.u.userId}`, `u${w.x.userId}`)).json().ErrorCode).toBe(120001);
-    expect((await before(w, 'administrator', `u${w.x.userId}`)).json().ErrorCode).toBe(0);
+    expect((await beforeSend(w, `u${w.u.userId}`, `u${w.x.userId}`)).json().ErrorCode).toBe(120001);
+    expect((await beforeSend(w, 'administrator', `u${w.x.userId}`)).json().ErrorCode).toBe(0);
   });
 
   test('回调鉴权：配置 Token 后签名错误返回 403', async () => {
@@ -89,15 +89,16 @@ describe('IM 回调与联系人', () => {
     const Sign = createHash('sha256').update(`tok${RequestTime}`).digest('hex');
     const from = `u${w.u.userId}`;
     const to = `u${w.t.userId}`;
-    expect((await before(w, from, to, { RequestTime, Sign })).statusCode).toBe(200);
-    expect((await before(w, from, to, { RequestTime, Sign: 'bad' })).statusCode).toBe(403);
-    expect((await before(w, from, to)).statusCode).toBe(403);
+    expect((await beforeSend(w, from, to, { RequestTime, Sign })).statusCode).toBe(200);
+    expect((await beforeSend(w, from, to, { RequestTime, Sign: 'bad' })).statusCode).toBe(403);
+    expect((await beforeSend(w, from, to)).statusCode).toBe(403);
   });
 
   test('联系人：学员看到原老师与当日代班老师；老师各自看到学员', async () => {
     const w = await world();
     await substituteOn(w, TODAY);
-    const list = async (who: { token: string }) => (await call(w.ctx, 'GET', '/api/im/contacts', { token: who.token })).json();
+    const list = async (who: { token: string }) =>
+      (await call(w.ctx, 'GET', '/api/im/contacts', { token: who.token })).json();
     const brief = (cs: { userId: number; role: string; substitute: boolean }[]) =>
       cs.map((c) => [c.userId, c.role, c.substitute]);
 

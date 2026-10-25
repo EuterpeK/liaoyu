@@ -421,7 +421,9 @@ async function settleConfirm(
   const [row] = await tx
     .update(appointments)
     .set({ confirmStatus: to })
-    .where(and(eq(appointments.id, a.id), eq(appointments.status, 'completed'), eq(appointments.confirmStatus, 'pending')))
+    .where(
+      and(eq(appointments.id, a.id), eq(appointments.status, 'completed'), eq(appointments.confirmStatus, 'pending')),
+    )
     .returning();
   if (!row) return null;
   if (to === 'disputed') {

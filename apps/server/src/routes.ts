@@ -10,6 +10,7 @@ import type { Deps } from './deps.ts';
 import { adminAuthRoutes } from './modules/admin/routes.ts';
 import { appointmentRoutes, teacherAppointmentRoutes } from './modules/appointments/routes.ts';
 import { authRoutes } from './modules/auth/routes.ts';
+import { teacherReplyStatsRoutes } from './modules/chat/routes.ts';
 import { imRoutes } from './modules/im/routes.ts';
 import { leaveChoiceRoutes, substituteInviteRoutes, teacherLeaveRoutes } from './modules/leaves/routes.ts';
 import { notificationRoutes } from './modules/notifications/routes.ts';
@@ -40,6 +41,7 @@ export async function registerRoutes(app: App, deps: Deps): Promise<void> {
   await app.register(teacherScheduleRoutes(deps), { prefix: '/api/teacher/schedule' });
   await app.register(appointmentRoutes(deps), { prefix: '/api/appointments' });
   await app.register(teacherAppointmentRoutes(deps), { prefix: '/api/teacher/appointments' });
+  await app.register(teacherReplyStatsRoutes(deps), { prefix: '/api/teacher/reply-stats' });
   await app.register(teacherLeaveRoutes(deps), { prefix: '/api/teacher/leaves' });
   await app.register(substituteInviteRoutes(deps), { prefix: '/api/teacher/substitute-invites' });
   await app.register(leaveChoiceRoutes(deps), { prefix: '/api/leave-choices' });

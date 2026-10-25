@@ -2,10 +2,10 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { Deps } from '../../deps.ts';
 import { todayCN } from '../../lib/dates.ts';
-import { verifyImSign } from '../../providers/tencent-callback.ts';
 import { imCredential, parseImId } from '../../providers/tencent.ts';
+import { verifyImSign } from '../../providers/tencent-callback.ts';
 import { userGuard } from '../auth/guards.ts';
-import { contactsOf, resolvePair } from '../chat/service.ts';
+import { contactsOf, handleAfterSend, resolvePair, textOf } from '../chat/service.ts';
 
 const IM_OK = { ActionStatus: 'OK', ErrorCode: 0, ErrorInfo: '' };
 const IM_NO_SERVICE = { ActionStatus: 'OK', ErrorCode: 120001, ErrorInfo: '当前没有进行中的服务，无法发送消息' };
@@ -35,7 +35,19 @@ export const imRoutes =
         if (from && to && req.body.CallbackCommand === 'C2C.CallbackBeforeSendMsg') {
           if (!(await resolvePair(deps.db, from, to, todayCN(now)))) return IM_NO_SERVICE;
         }
-        // 后续 Task 在此追加：发送后处理
+        if (from && to && req.body.CallbackCommand === 'C2C.CallbackAfterSendMsg') {
+          try {
+            await handleAfterSend(deps.db, {
+              from,
+              to,
+              text: textOf(req.body.MsgBody),
+              now,
+              hotline: deps.config.crisisHotline,
+            });
+          } catch (err) {
+            req.log.error({ err, from, to }, 'IM 发送后处理失败');
+          }
+        }
         return IM_OK;
       },
     );
