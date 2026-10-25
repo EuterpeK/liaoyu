@@ -34,6 +34,7 @@ describe('定时任务', () => {
     expect(JOBS.map((j) => [j.name, j.cron])).toEqual([
       ['daily', '10 0 * * *'],
       ['weekly-settlement', '0 2 * * 1'],
+      ['frequent', '* * * * *'],
     ]);
     expect(TZ).toBe('Asia/Shanghai');
   });
@@ -48,12 +49,19 @@ describe('定时任务', () => {
     const jobCtx: JobContext = { db: ctx.db, clock: fixedClock('2026-12-01T04:00:00Z'), log };
     await registerJobs(f.boss, jobCtx);
 
-    expect(f.created).toEqual(['weekly-settlement']);
+    expect(f.created).toEqual(['weekly-settlement', 'frequent']);
     expect(f.schedules).toEqual([
       { name: 'daily', cron: '10 0 * * *', tz: TZ },
       { name: 'weekly-settlement', cron: '0 2 * * 1', tz: TZ },
+      { name: 'frequent', cron: '* * * * *', tz: TZ },
     ]);
     expect(await f.handlers.get('daily')?.([])).toEqual({ accrued: 30, ended: 1 });
+    expect(await f.handlers.get('frequent')?.([])).toEqual({
+      expiredChoices: 0,
+      noShows: 0,
+      autoCompleted: 0,
+      autoConfirmed: 0,
+    });
     expect(log.info).toHaveBeenCalled();
   });
 

@@ -5,6 +5,7 @@ import type { Clock } from '../lib/clock.ts';
 import { todayCN } from '../lib/dates.ts';
 import { runWeeklySettlement } from '../modules/settlement/service.ts';
 import { runDailyJobs } from './daily.ts';
+import { runFrequentJobs } from './frequent.ts';
 
 export const TZ = 'Asia/Shanghai';
 
@@ -30,6 +31,11 @@ export const JOBS: readonly JobDef[] = [
     name: 'weekly-settlement',
     cron: '0 2 * * 1',
     run: async ({ db, clock }) => ({ created: (await runWeeklySettlement(db, todayCN(clock.now()))).length }),
+  },
+  {
+    name: 'frequent',
+    cron: '* * * * *',
+    run: ({ db, clock }) => runFrequentJobs(db, clock.now()),
   },
 ];
 

@@ -14,6 +14,7 @@ pnpm -F @liaoyu/server dev                    # http://localhost:8700
 ```
 
 - 未配置 `ZPAY_PID/ZPAY_KEY` 时支付走本地模拟收银台；未配置 `WX_APPID/WX_APPSECRET` 时微信登录走 MOCK。
+- 未配置 `TENCENT_SDKAPPID/TENCENT_SECRETKEY` 时 IM / TRTC 走 MOCK：`userSig` 为 `mock`，调用进入通话接口即记为已进房，由分钟级任务自动完成通话。
 - 接口文档（非生产环境）：`GET /api/openapi.json`。
 - 环境变量见 `apps/server/src/config.ts`，可写在 `apps/server/.env`。
 
