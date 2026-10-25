@@ -7,6 +7,7 @@ import type {
 } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { Deps } from './deps.ts';
+import { authRoutes } from './modules/auth/routes.ts';
 
 export type App = FastifyInstance<
   RawServerDefault,
@@ -17,5 +18,5 @@ export type App = FastifyInstance<
 >;
 
 export async function registerRoutes(app: App, deps: Deps): Promise<void> {
-  // 后续 Task 在此注册业务模块
+  await app.register(authRoutes(deps), { prefix: '/api/auth' });
 }

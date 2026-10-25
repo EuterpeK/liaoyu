@@ -96,3 +96,9 @@ export async function insertPackage(
     .returning({ id: packages.id });
   return p.id;
 }
+
+export async function loginUser(ctx: Ctx, code: string): Promise<{ token: string; userId: number }> {
+  const res = await call(ctx, 'POST', '/api/auth/wxlogin', { body: { code } });
+  const body = res.json();
+  return { token: body.token, userId: body.user.id };
+}

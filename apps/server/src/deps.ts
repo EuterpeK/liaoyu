@@ -1,6 +1,7 @@
 import type { Config } from './config.ts';
 import type { DbOrTx } from './db/client.ts';
 import type { Clock } from './lib/clock.ts';
+import { createWechat, type Wechat } from './providers/wechat.ts';
 
 export interface BaseDeps {
   config: Config;
@@ -8,8 +9,10 @@ export interface BaseDeps {
   db: DbOrTx;
 }
 
-export type Deps = BaseDeps;
+export interface Deps extends BaseDeps {
+  wechat: Wechat;
+}
 
 export function createDeps(base: BaseDeps): Deps {
-  return { ...base };
+  return { ...base, wechat: createWechat(base.config.wx) };
 }
