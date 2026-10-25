@@ -1,11 +1,13 @@
+import { eq } from 'drizzle-orm';
 import { buildApp } from '../src/app.ts';
 import { type Config, loadConfig } from '../src/config.ts';
 import type { DbOrTx } from '../src/db/client.ts';
-import { packages, type TeacherStatus, teacherProfiles, users } from '../src/db/schema.ts';
+import { packages, serviceRelations, type TeacherStatus, teacherProfiles, users } from '../src/db/schema.ts';
 import { createDeps } from '../src/deps.ts';
 import { fixedClock } from '../src/lib/clock.ts';
 import { encryptField } from '../src/lib/crypto.ts';
 import { ADMIN_COOKIE, upsertAdmin } from '../src/modules/admin/service.ts';
+import { createOrder, fulfillOrder } from '../src/modules/orders/service.ts';
 import { resetDb, testDb } from './db-utils.ts';
 import { TEST_DATABASE_URL } from './test-env.ts';
 
@@ -110,4 +112,11 @@ export async function adminCookie(ctx: Ctx, username = 'boss', password = 'passw
   const c = res.cookies.find((x) => x.name === ADMIN_COOKIE);
   if (!c) throw new Error(`管理员登录失败: ${res.body}`);
   return `${c.name}=${c.value}`;
+}
+
+export async function buyAndPay(ctx: Ctx, userId: number, packageId: number) {
+  const order = await createOrder(ctx.db, ctx.clock, { userId, packageId, provider: 'zpay' });
+  await fulfillOrder(ctx.db, ctx.clock, order.outTradeNo, { tradeNo: 'T', paidCents: order.amountCents });
+  const [rel] = await ctx.db.select().from(serviceRelations).where(eq(serviceRelations.orderId, order.id));
+  return rel;
 }
