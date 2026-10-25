@@ -1,9 +1,9 @@
 import { randomInt } from 'node:crypto';
-import { eq, getTableColumns } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, gte, lt, sql } from 'drizzle-orm';
 import type { DbOrTx } from '../../db/client.ts';
 import { orders, type PackageSnapshot, packages, teacherProfiles, users } from '../../db/schema.ts';
 import type { Clock } from '../../lib/clock.ts';
-import { formatDateTimeCN, todayCN } from '../../lib/dates.ts';
+import { addDays, dayStartCN, formatDateTimeCN, todayCN } from '../../lib/dates.ts';
 import { HttpError } from '../../lib/errors.ts';
 import { createRelationForOrder } from '../relations/service.ts';
 
@@ -80,4 +80,44 @@ export async function fulfillOrder(
     await createRelationForOrder(tx, order, todayCN(now));
     return { ok: true, fulfilled: true };
   });
+}
+
+export interface OrderQuery {
+  userId?: number;
+  teacherId?: number;
+  status?: Order['status'];
+  /** 北京时间日期，含 */
+  from?: string;
+  /** 北京时间日期，含 */
+  to?: string;
+}
+
+export async function queryOrders(db: DbOrTx, q: OrderQuery) {
+  return db
+    .select({
+      outTradeNo: orders.outTradeNo,
+      userId: orders.userId,
+      userNickname: users.nickname,
+      teacherId: orders.teacherId,
+      teacherName: teacherProfiles.displayName,
+      packageTitle: sql<string>`${orders.packageSnapshot}->>'title'`,
+      amountCents: orders.amountCents,
+      status: orders.status,
+      tradeNo: orders.tradeNo,
+      paidAt: orders.paidAt,
+      createdAt: orders.createdAt,
+    })
+    .from(orders)
+    .innerJoin(users, eq(users.id, orders.userId))
+    .innerJoin(teacherProfiles, eq(teacherProfiles.userId, orders.teacherId))
+    .where(
+      and(
+        q.userId ? eq(orders.userId, q.userId) : undefined,
+        q.teacherId ? eq(orders.teacherId, q.teacherId) : undefined,
+        q.status ? eq(orders.status, q.status) : undefined,
+        q.from ? gte(orders.createdAt, dayStartCN(q.from)) : undefined,
+        q.to ? lt(orders.createdAt, dayStartCN(addDays(q.to, 1))) : undefined,
+      ),
+    )
+    .orderBy(desc(orders.id));
 }
