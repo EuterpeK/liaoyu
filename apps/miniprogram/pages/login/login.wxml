@@ -1,0 +1,7 @@
+<view class="login">
+  <view class="logo">LiaoYu</view>
+  <view class="muted">陪伴咨询平台</view>
+  <button class="btn login-btn" disabled="{{loading}}" bindtap="onTapLogin">
+    {{loading ? '登录中…' : '微信一键登录'}}
+  </button>
+</view>

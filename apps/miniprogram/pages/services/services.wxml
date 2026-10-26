@@ -1,0 +1,1 @@
+<view class="empty" wx:if="{{!ready}}">加载中…</view>

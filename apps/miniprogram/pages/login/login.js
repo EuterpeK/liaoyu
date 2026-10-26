@@ -1,0 +1,3 @@
+Page({
+  data: { loading: false },
+});
