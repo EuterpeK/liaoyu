@@ -1,0 +1,33 @@
+.filter {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 20rpx;
+}
+.chip {
+  background: #fff;
+  border-radius: 999rpx;
+  padding: 10rpx 28rpx;
+  margin: 0 16rpx 16rpx 0;
+  font-size: 24rpx;
+  color: #666;
+}
+.chip-on {
+  background: #1677ff;
+  color: #fff;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.name {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+.level {
+  color: #1677ff;
+  font-size: 24rpx;
+}
+.price {
+  color: #e6533c;
+}
