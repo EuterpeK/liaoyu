@@ -7,7 +7,7 @@ Page({
       await getApp().ensureLoginReady();
       wx.reLaunch({ url: '/pages/index/index' });
     } catch (e) {
-      /* toast 已由下层给出 */
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' });
     }
     this.setData({ loading: false });
   },

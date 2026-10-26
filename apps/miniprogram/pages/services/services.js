@@ -1,5 +1,5 @@
 const api = require('../../utils/request.js');
-const { hm } = require('../../utils/format.js');
+const { hm, STATUS_TEXT } = require('../../utils/format.js');
 
 Page({
   data: { role: 'student', loading: true, relations: [], appointments: [] },
@@ -10,7 +10,14 @@ Page({
       this.setData({ role: me.role });
       if (me.role === 'teacher') {
         const appointments = await api.get('/api/teacher/appointments', { silent: true }).catch(() => []);
-        this.setData({ appointments: appointments.map((a) => ({ ...a, hm: hm(a.startAt) })), loading: false });
+        this.setData({
+          appointments: appointments.map((a) => ({
+            ...a,
+            hm: hm(a.startAt),
+            statusText: STATUS_TEXT[a.status] || a.status,
+          })),
+          loading: false,
+        });
       } else {
         const [relations, appointments] = await Promise.all([
           api.get('/api/relations', { silent: true }).catch(() => []),
@@ -18,12 +25,16 @@ Page({
         ]);
         this.setData({
           relations,
-          appointments: appointments.map((a) => ({ ...a, hm: hm(a.startAt) })),
+          appointments: appointments.map((a) => ({
+            ...a,
+            hm: hm(a.startAt),
+            statusText: STATUS_TEXT[a.status] || a.status,
+          })),
           loading: false,
         });
       }
     } catch (e) {
-      wx.redirectTo({ url: '/pages/login/login' });
+      wx.reLaunch({ url: '/pages/login/login' });
     }
   },
 

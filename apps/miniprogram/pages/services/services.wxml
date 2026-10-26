@@ -17,7 +17,7 @@
     <view class="row item" wx:for="{{appointments}}" wx:key="id">
       <text>{{item.date}} {{item.hm}}</text>
       <text class="cancel" wx:if="{{item.status === 'booked'}}" data-id="{{item.id}}" catchtap="onTapCancel">取消</text>
-      <text class="muted" wx:else>{{item.status}}</text>
+      <text class="muted" wx:else>{{item.statusText}}</text>
     </view>
     <view class="empty" wx:if="{{!appointments.length}}">暂无预约</view>
   </view>
@@ -28,8 +28,8 @@
   <view class="card">
     <view class="sec-title">预约列表</view>
     <view class="row item" wx:for="{{appointments}}" wx:key="id">
-      <text>{{item.date}} {{item.hm}}</text>
-      <text class="muted">{{item.status}}</text>
+      <text>{{item.date}} {{item.hm}} {{item.userNickname || ''}}</text>
+      <text class="muted">{{item.statusText}}</text>
     </view>
     <view class="empty" wx:if="{{!appointments.length}}">暂无预约</view>
   </view>

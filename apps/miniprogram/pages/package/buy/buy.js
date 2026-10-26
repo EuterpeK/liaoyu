@@ -25,6 +25,9 @@ Page({
       wx.showToast({ title: '支付成功', icon: 'success' });
       setTimeout(() => wx.switchTab({ url: '/pages/services/services' }), 800);
     } catch (e) {
+      if (e && e.message === '支付确认超时') {
+        wx.showToast({ title: '支付确认超时，请稍后在服务页查看', icon: 'none' });
+      }
       this.setData({ paying: false });
     }
   },
@@ -35,8 +38,15 @@ Page({
       wx.request({
         url: `${baseURL}/api/pay/mock/confirm?out_trade_no=${encodeURIComponent(outTradeNo)}`,
         method: 'POST',
-        success: resolve,
-        fail: reject,
+        success: (res) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) return resolve();
+          wx.showToast({ title: '支付确认失败', icon: 'none' });
+          reject(new Error('mock confirm ' + res.statusCode));
+        },
+        fail: () => {
+          wx.showToast({ title: '网络异常，请重试', icon: 'none' });
+          reject(new Error('network'));
+        },
       });
     });
   },

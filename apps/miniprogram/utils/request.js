@@ -5,19 +5,19 @@ function toast(msg) {
   wx.showToast({ title: msg, icon: 'none' });
 }
 
-function request(method, path, { data, silent } = {}) {
+function request(method, path, { data, silent, retried } = {}) {
   return new Promise((resolve, reject) => {
     wx.request({
       url: baseURL + path,
       method,
       data,
-      header: { Authorization: 'Bearer ' + (wx.getStorageSync('liaoyu_token') || '') },
+      header: { Authorization: 'Bearer ' + (auth.getToken() || '') },
       success: async (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) return resolve(res.data);
-        if (res.statusCode === 401 && !silent) {
+        if (res.statusCode === 401 && !retried) {
           try {
             await auth.relogin();
-            return resolve(await request(method, path, { data, silent: true }));
+            return resolve(await request(method, path, { data, silent: true, retried: true }));
           } catch (e) {
             if (!silent) toast('请先登录');
             return reject(e);

@@ -38,8 +38,8 @@
   </view>
   <view class="card" wx:for="{{appointments}}" wx:key="id">
     <view class="row">
-      <text>{{item.date}} {{item.hm}}</text>
-      <text class="muted">{{item.status}}</text>
+      <text>{{item.date}} {{item.hm}} {{item.userNickname || ''}}</text>
+      <text class="muted">{{item.statusText}}</text>
     </view>
   </view>
   <view class="empty" wx:if="{{!appointments.length}}">暂无预约</view>

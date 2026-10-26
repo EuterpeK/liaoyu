@@ -22,4 +22,6 @@ const hm = (iso) => {
   return `${p(d.getHours())}:${p(d.getMinutes())}`;
 };
 
-module.exports = { FEN, ymd, nextDays, hm };
+const STATUS_TEXT = { booked: '已预约', completed: '已完成', cancelled: '已取消', teacher_no_show: '老师缺席' };
+
+module.exports = { FEN, ymd, nextDays, hm, STATUS_TEXT };

@@ -1,5 +1,5 @@
 const api = require('../../utils/request.js');
-const { hm } = require('../../utils/format.js');
+const { hm, STATUS_TEXT, ymd } = require('../../utils/format.js');
 
 Page({
   data: { role: 'student', loading: true, teachers: [], directions: [], direction: '', appointments: [], todayLabel: '' },
@@ -11,7 +11,7 @@ Page({
       if (me.role === 'teacher') await this.loadTeacherHome();
       else await this.loadTeachers();
     } catch (e) {
-      wx.redirectTo({ url: '/pages/login/login' });
+      wx.reLaunch({ url: '/pages/login/login' });
     }
   },
 
@@ -25,8 +25,12 @@ Page({
   async loadTeacherHome() {
     const appointments = await api.get('/api/teacher/appointments', { silent: true }).catch(() => []);
     this.setData({
-      appointments: appointments.map((a) => ({ ...a, hm: hm(a.startAt) })),
-      todayLabel: new Date().toLocaleDateString('zh-CN'),
+      appointments: appointments.map((a) => ({
+        ...a,
+        hm: hm(a.startAt),
+        statusText: STATUS_TEXT[a.status] || a.status,
+      })),
+      todayLabel: ymd(new Date()),
       loading: false,
     });
   },

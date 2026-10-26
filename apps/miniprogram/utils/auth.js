@@ -22,11 +22,15 @@ function fetchMe() {
   return new Promise((resolve, reject) => {
     wx.request({
       url: baseURL + '/api/auth/me',
-      header: { Authorization: 'Bearer ' + (wx.getStorageSync(TOKEN_KEY) || '') },
+      header: { Authorization: 'Bearer ' + getToken() },
       success: (res) => (res.statusCode === 200 ? resolve(res.data) : reject(res)),
       fail: () => reject(new Error('network')),
     });
   });
+}
+
+function getToken() {
+  return wx.getStorageSync(TOKEN_KEY) || '';
 }
 
 function withRole(me) {
@@ -46,10 +50,17 @@ async function ensureLogin() {
   return withRole(await fetchMe());
 }
 
-/** 401 时强制重登（request 层调用） */
-async function relogin() {
-  wx.removeStorageSync(TOKEN_KEY);
-  return ensureLogin();
+/** 401 时强制重登（request 层调用）；并发调用共享同一 in-flight Promise */
+let reloginPromise = null;
+
+function relogin() {
+  if (!reloginPromise) {
+    wx.removeStorageSync(TOKEN_KEY);
+    reloginPromise = ensureLogin().finally(() => {
+      reloginPromise = null;
+    });
+  }
+  return reloginPromise;
 }
 
-module.exports = { ensureLogin, relogin, fetchMe, withRole };
+module.exports = { ensureLogin, relogin, fetchMe, withRole, getToken };

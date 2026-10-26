@@ -5,10 +5,10 @@ Page({
 
   async onShow() {
     try {
-      await getApp().ensureLoginReady();
-      this.setData({ me: await auth.fetchMe().then((m) => auth.withRole(m)) });
+      const me = await getApp().ensureLoginReady();
+      this.setData({ me });
     } catch (e) {
-      wx.redirectTo({ url: '/pages/login/login' });
+      wx.reLaunch({ url: '/pages/login/login' });
     }
   },
 
