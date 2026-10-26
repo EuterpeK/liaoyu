@@ -21,8 +21,8 @@ function wxLoginCode() {
 function fetchMe() {
   return new Promise((resolve, reject) => {
     wx.request({
-      url: baseURL + '/api/auth/me',
-      header: { Authorization: 'Bearer ' + getToken() },
+      url: `${baseURL}/api/auth/me`,
+      header: { Authorization: `Bearer ${getToken()}` },
       success: (res) => (res.statusCode === 200 ? resolve(res.data) : reject(res)),
       fail: () => reject(new Error('network')),
     });

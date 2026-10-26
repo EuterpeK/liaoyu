@@ -285,7 +285,7 @@ export interface JoinTicket {
 /** 记录最早一次进房时间。PostgreSQL 的 LEAST 忽略 NULL，回调乱序时也保留最早值 */
 export async function recordEnter(db: DbOrTx, appointmentId: number, userId: number, at: Date): Promise<boolean> {
   const a = await getAppointment(db, appointmentId);
-  if (!a || a.status !== 'booked') return false;
+  if (a?.status !== 'booked') return false;
   const set =
     userId === a.teacherId
       ? { teacherJoinedAt: sql`LEAST(${appointments.teacherJoinedAt}, ${at}::timestamptz)` }
@@ -400,7 +400,7 @@ export const CONFIRM_HOURS = 48;
 /** 单次套餐：全额计给上课老师并结束服务关系。调用方须在事务中且已锁服务关系行 */
 async function accrueSingle(tx: DbOrTx, a: Appointment): Promise<void> {
   const [rel] = await tx.select().from(serviceRelations).where(eq(serviceRelations.id, a.relationId));
-  if (!rel || rel.packageType !== 'single') return;
+  if (rel?.packageType !== 'single') return;
   await tx
     .insert(accruals)
     .values({ relationId: rel.id, date: a.date, teacherId: a.teacherId, amountCents: rel.amountCents })

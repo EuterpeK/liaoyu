@@ -2,7 +2,15 @@ const api = require('../../utils/request.js');
 const { hm, STATUS_TEXT, ymd } = require('../../utils/format.js');
 
 Page({
-  data: { role: 'student', loading: true, teachers: [], directions: [], direction: '', appointments: [], todayLabel: '' },
+  data: {
+    role: 'student',
+    loading: true,
+    teachers: [],
+    directions: [],
+    direction: '',
+    appointments: [],
+    todayLabel: '',
+  },
 
   async onShow() {
     try {
@@ -10,7 +18,7 @@ Page({
       this.setData({ role: me.role });
       if (me.role === 'teacher') await this.loadTeacherHome();
       else await this.loadTeachers();
-    } catch (e) {
+    } catch (_e) {
       wx.reLaunch({ url: '/pages/login/login' });
     }
   },
@@ -20,7 +28,12 @@ Page({
     const q = this.data.direction ? `?direction=${encodeURIComponent(this.data.direction)}` : '';
     const teachers = await api.get(`/api/teachers${q}`, { silent: true }).catch(() => []);
     this.setData({
-      teachers: teachers.map((t, i) => ({ ...t, initial: (t.displayName || '?')[0], tone: i % 4, yuan: (t.minPriceCents / 100).toFixed(0) })),
+      teachers: teachers.map((t, i) => ({
+        ...t,
+        initial: (t.displayName || '?')[0],
+        tone: i % 4,
+        yuan: (t.minPriceCents / 100).toFixed(0),
+      })),
       loading: false,
     });
   },

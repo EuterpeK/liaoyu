@@ -3,15 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { loadConfig } from '../config.ts';
 import { createDb } from '../db/client.ts';
 import { runMigrations } from '../db/migrate.ts';
-import {
-  appointments,
-  orders,
-  packages,
-  schedules,
-  serviceRelations,
-  teacherProfiles,
-  users,
-} from '../db/schema.ts';
+import { appointments, orders, packages, schedules, serviceRelations, teacherProfiles, users } from '../db/schema.ts';
 import { encryptField } from '../lib/crypto.ts';
 
 /** 与 providers/wechat.ts 的 MOCK 逻辑保持一致：不同 code 得到不同用户 */
@@ -27,7 +19,14 @@ interface SeedTeacher {
   directions: string[];
   intro: string;
   credentials: string[];
-  packages: { type: 'single' | 'month' | 'quarter' | 'year'; title: string; priceCents: number; days: number; callQuota: number; replyHours: number }[];
+  packages: {
+    type: 'single' | 'month' | 'quarter' | 'year';
+    title: string;
+    priceCents: number;
+    days: number;
+    callQuota: number;
+    replyHours: number;
+  }[];
   weekdays: { weekday: number; startMin: number; endMin: number }[];
 }
 
@@ -114,7 +113,7 @@ async function upsertUser(db: ReturnType<typeof createDb>, code: string, nicknam
   const openid = mockOpenid(code);
   const [row] = await db
     .insert(users)
-    .values({ openid, nickname })
+    .values({ openid, nickname: nickname ?? '' })
     .onConflictDoUpdate({ target: users.openid, set: { openid, ...(nickname ? { nickname } : {}) } })
     .returning({ id: users.id });
   return row.id;
@@ -157,12 +156,20 @@ try {
         },
       });
     // 排班：仅当该老师没有任何排班时写入（幂等）
-    const existing = await db.select({ id: schedules.id }).from(schedules).where(eq(schedules.teacherId, userId)).limit(1);
+    const existing = await db
+      .select({ id: schedules.id })
+      .from(schedules)
+      .where(eq(schedules.teacherId, userId))
+      .limit(1);
     if (existing.length === 0) {
       await db.insert(schedules).values(t.weekdays.map((w) => ({ teacherId: userId, ...w })));
     }
     // 套餐：仅当该老师没有任何套餐时写入（幂等）
-    const existingPkg = await db.select({ id: packages.id }).from(packages).where(eq(packages.teacherId, userId)).limit(1);
+    const existingPkg = await db
+      .select({ id: packages.id })
+      .from(packages)
+      .where(eq(packages.teacherId, userId))
+      .limit(1);
     if (existingPkg.length === 0) {
       await db.insert(packages).values(t.packages.map((p) => ({ teacherId: userId, ...p })));
     }
@@ -175,13 +182,25 @@ try {
   }
 
   // 演示数据：小明的进行中服务 + 一条已预约（幂等：以订单号为准）
-  const seedOrder = await db.select({ id: orders.id }).from(orders).where(eq(orders.outTradeNo, 'SEED_DEMO_0001')).limit(1);
+  const seedOrder = await db
+    .select({ id: orders.id })
+    .from(orders)
+    .where(eq(orders.outTradeNo, 'SEED_DEMO_0001'))
+    .limit(1);
   if (seedOrder.length === 0) {
     const stuId = await upsertUser(db, 'dev-student-1', '小明');
     const t1 = TEACHERS[0];
     const teaId = await upsertUser(db, t1.code, t1.name);
     const [pkg] = await db
-      .select({ id: packages.id, title: packages.title, type: packages.type, priceCents: packages.priceCents, days: packages.days, callQuota: packages.callQuota, replyHours: packages.replyHours })
+      .select({
+        id: packages.id,
+        title: packages.title,
+        type: packages.type,
+        priceCents: packages.priceCents,
+        days: packages.days,
+        callQuota: packages.callQuota,
+        replyHours: packages.replyHours,
+      })
       .from(packages)
       .where(and(eq(packages.teacherId, teaId), eq(packages.onSale, true)))
       .limit(1);
@@ -194,7 +213,14 @@ try {
         userId: stuId,
         teacherId: teaId,
         packageId: pkg.id,
-        packageSnapshot: { type: pkg.type, title: pkg.title, priceCents: pkg.priceCents, days: pkg.days, callQuota: pkg.callQuota, replyHours: pkg.replyHours },
+        packageSnapshot: {
+          type: pkg.type,
+          title: pkg.title,
+          priceCents: pkg.priceCents,
+          days: pkg.days,
+          callQuota: pkg.callQuota,
+          replyHours: pkg.replyHours,
+        },
         amountCents: pkg.priceCents,
         payProvider: 'mock',
         status: 'paid',
@@ -236,7 +262,9 @@ try {
     console.log('演示数据已存在，跳过');
   }
 
-  console.log('种子数据完成。测试账号 code：dev-student-1/2/3，dev-teacher-1/2/3/4；管理员用 pnpm -F @liaoyu/server create-admin');
+  console.log(
+    '种子数据完成。测试账号 code：dev-student-1/2/3，dev-teacher-1/2/3/4；管理员用 pnpm -F @liaoyu/server create-admin',
+  );
 } finally {
   await db.$client.end();
 }

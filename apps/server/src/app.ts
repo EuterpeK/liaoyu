@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import cookie from '@fastify/cookie';
 import formbody from '@fastify/formbody';
 import swagger from '@fastify/swagger';
@@ -52,6 +53,11 @@ export async function buildApp(deps: Deps): Promise<App> {
   if (deps.config.nodeEnv !== 'production') {
     app.get('/api/openapi.json', { schema: { hide: true } }, async () => app.swagger());
   }
+
+  app.get('/admin', { schema: { hide: true } }, async (_req, reply) => {
+    const html = await readFile(new URL('../public/admin.html', import.meta.url), 'utf8');
+    return reply.type('text/html; charset=utf-8').send(html);
+  });
 
   await registerRoutes(app, deps);
   return app;

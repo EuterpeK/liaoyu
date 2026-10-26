@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { admins } from '../../db/schema.ts';
+import { admins, auditLogs } from '../../db/schema.ts';
 import type { Deps } from '../../deps.ts';
 import { audit } from '../../lib/audit.ts';
 import { HttpError } from '../../lib/errors.ts';
@@ -49,4 +49,25 @@ export const adminAuthRoutes =
         .where(eq(admins.id, req.adminId));
       return a;
     });
+
+    app.get(
+      '/audit-logs',
+      {
+        preHandler: adminGuard(deps),
+        schema: { querystring: z.object({ limit: z.coerce.number().int().min(1).max(500).default(100) }) },
+      },
+      async (req) =>
+        deps.db
+          .select({
+            id: auditLogs.id,
+            adminId: auditLogs.adminId,
+            action: auditLogs.action,
+            target: auditLogs.target,
+            detail: auditLogs.detail,
+            createdAt: auditLogs.createdAt,
+          })
+          .from(auditLogs)
+          .orderBy(desc(auditLogs.id))
+          .limit(req.query.limit),
+    );
   };

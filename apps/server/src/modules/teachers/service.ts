@@ -40,7 +40,7 @@ export async function requireActiveTeacher(db: DbOrTx, userId: number): Promise<
     .select({ level: teacherProfiles.level, status: teacherProfiles.status })
     .from(teacherProfiles)
     .where(eq(teacherProfiles.userId, userId));
-  if (!t || t.status !== 'active') throw new HttpError(403, '仅已认证老师可操作');
+  if (t?.status !== 'active') throw new HttpError(403, '仅已认证老师可操作');
   return { level: t.level };
 }
 

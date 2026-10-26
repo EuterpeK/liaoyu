@@ -54,4 +54,19 @@ describe('管理员登录', () => {
     const logs = await ctx.db.select().from(auditLogs);
     expect(logs.map((l) => l.action)).toEqual(['admin.login']);
   });
+
+  test('审计日志按时间倒序返回，未登录 401', async () => {
+    const ctx = await setup();
+    expect((await call(ctx, 'GET', '/api/admin/audit-logs')).statusCode).toBe(401);
+    const cookie = await adminCookie(ctx);
+    await adminCookie(ctx); // 第二次登录再产生一条
+    const res = await call(ctx, 'GET', '/api/admin/audit-logs', { cookie });
+    expect(res.statusCode).toBe(200);
+    const logs = res.json();
+    expect(logs.length).toBeGreaterThanOrEqual(2);
+    expect(logs[0].action).toBe('admin.login');
+    expect(new Date(logs[0].createdAt).getTime()).toBeGreaterThanOrEqual(
+      new Date(logs[logs.length - 1].createdAt).getTime(),
+    );
+  });
 });

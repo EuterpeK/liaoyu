@@ -41,7 +41,7 @@ Page({
         success: (res) => {
           if (res.statusCode >= 200 && res.statusCode < 300) return resolve();
           wx.showToast({ title: '支付确认失败', icon: 'none' });
-          reject(new Error('mock confirm ' + res.statusCode));
+          reject(new Error(`mock confirm ${res.statusCode}`));
         },
         fail: () => {
           wx.showToast({ title: '网络异常，请重试', icon: 'none' });
@@ -51,7 +51,7 @@ Page({
     });
   },
 
-  realPay(order) {
+  realPay(_order) {
     // TODO(正式支付): 调用 wx.requestPayment({timeStamp, nonceStr, package, signType, paySign})
     // 参数需后端提供 JSAPI 下单接口（ZPAY 适配），首版仅 MOCK。
     wx.showToast({ title: '正式支付尚未开通', icon: 'none' });
@@ -61,7 +61,7 @@ Page({
     return new Promise((resolve, reject) => {
       const tick = async (left) => {
         const o = await api.get(`/api/orders/${outTradeNo}`, { silent: true }).catch(() => null);
-        if (o && o.paid) return resolve();
+        if (o?.paid) return resolve();
         if (left <= 0) return reject(new Error('支付确认超时'));
         setTimeout(() => tick(left - 1), 1000);
       };

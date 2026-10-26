@@ -30,7 +30,7 @@ export async function createOrder(
     .from(packages)
     .innerJoin(teacherProfiles, eq(teacherProfiles.userId, packages.teacherId))
     .where(eq(packages.id, input.packageId));
-  if (!pkg || !pkg.onSale || pkg.teacherStatus !== 'active') throw new HttpError(400, '套餐不存在或已下架');
+  if (!pkg?.onSale || pkg.teacherStatus !== 'active') throw new HttpError(400, '套餐不存在或已下架');
   if (pkg.teacherId === input.userId) throw new HttpError(400, '不能购买自己的套餐');
 
   const snapshot: PackageSnapshot = {

@@ -20,7 +20,7 @@ Page({
     try {
       await getApp().ensureLoginReady();
       wx.reLaunch({ url: '/pages/index/index' });
-    } catch (e) {
+    } catch (_e) {
       wx.showToast({ title: '登录失败，请重试', icon: 'none' });
     }
     this.setData({ loading: '' });
@@ -34,7 +34,7 @@ Page({
       const me = await auth.loginAs(code);
       getApp().loginPromise = Promise.resolve(me);
       wx.reLaunch({ url: '/pages/index/index' });
-    } catch (err) {
+    } catch (_err) {
       wx.showToast({ title: '登录失败，请确认已运行 seed', icon: 'none' });
     }
     this.setData({ loading: '' });

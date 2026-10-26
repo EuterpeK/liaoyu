@@ -11,7 +11,7 @@ function request(method, path, { data, silent, retried } = {}) {
       url: baseURL + path,
       method,
       data,
-      header: { Authorization: 'Bearer ' + (auth.getToken() || '') },
+      header: { Authorization: `Bearer ${auth.getToken() || ''}` },
       success: async (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) return resolve(res.data);
         if (res.statusCode === 401 && !retried) {
@@ -23,7 +23,7 @@ function request(method, path, { data, silent, retried } = {}) {
             return reject(e);
           }
         }
-        const msg = (res.data && res.data.error) || '请求失败';
+        const msg = res.data?.error || '请求失败';
         if (!silent) toast(msg);
         return reject(new Error(msg));
       },

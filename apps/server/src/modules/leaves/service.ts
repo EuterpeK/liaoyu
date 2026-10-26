@@ -115,7 +115,7 @@ export async function createLeave(db: DbOrTx, now: Date, input: LeaveInput): Pro
   try {
     return await db.transaction(async (tx) => {
       const me = await lockTeacher(tx, teacherId);
-      if (!me || me.status !== 'active') throw new HttpError(403, '仅已认证老师可操作');
+      if (me?.status !== 'active') throw new HttpError(403, '仅已认证老师可操作');
       if (await onLeave(tx, teacherId, startDate, endDate)) throw new HttpError(409, '与已有请假时间重叠');
       if (await substitutingDuring(tx, teacherId, startDate, endDate)) {
         throw new HttpError(409, '你已答应该时段的代班，请先联系原老师撤销');
@@ -126,7 +126,7 @@ export async function createLeave(db: DbOrTx, now: Date, input: LeaveInput): Pro
         .where(inArray(teacherProfiles.userId, ids));
       for (const id of ids) {
         const c = cands.find((x) => x.userId === id);
-        if (!c || c.status !== 'active') throw new HttpError(400, '代班老师不存在或未认证');
+        if (c?.status !== 'active') throw new HttpError(400, '代班老师不存在或未认证');
         if (c.level < me.level) throw new HttpError(400, '代班老师须为同级或更高级');
         // biome-ignore lint/performance/noAwaitInLoops: 事务内顺序执行
         if (await onLeave(tx, id, startDate, endDate)) throw new HttpError(400, '代班老师该时段也在请假');
@@ -377,7 +377,7 @@ export async function decideChoice(
     } else {
       const teacherId = q.teacherId;
       const cand = await getCandidate(tx, c.leaveId, teacherId);
-      if (!cand || cand.status !== 'accepted') throw new HttpError(400, '该老师不是可选的代班老师');
+      if (cand?.status !== 'accepted') throw new HttpError(400, '该老师不是可选的代班老师');
       const from = later(c.startDate, today);
       const blocked = await leaveBlocker(tx, ownerId);
       await rewriteSegments(tx, c.relationId, (s) =>
@@ -410,7 +410,7 @@ export async function revokeSubstitute(
       .from(substituteCandidates)
       .where(and(eq(substituteCandidates.leaveId, q.leaveId), eq(substituteCandidates.teacherId, q.candidateId)))
       .for('update');
-    if (!cand || cand.status !== 'accepted') throw new HttpError(409, '该老师不在已同意代班状态');
+    if (cand?.status !== 'accepted') throw new HttpError(409, '该老师不在已同意代班状态');
     const today = todayCN(now);
     if (leave.endDate < today) throw new HttpError(409, '请假已结束');
 

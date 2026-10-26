@@ -34,7 +34,7 @@ Page({
           loading: false,
         });
       }
-    } catch (e) {
+    } catch (_e) {
       wx.reLaunch({ url: '/pages/login/login' });
     }
   },
