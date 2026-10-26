@@ -1,0 +1,25 @@
+.sec-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+.item {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.item:last-child {
+  border-bottom: none;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.name {
+  font-size: 30rpx;
+}
+.link,
+.cancel {
+  color: #1677ff;
+  font-size: 26rpx;
+}

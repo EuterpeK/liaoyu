@@ -1,1 +1,36 @@
-<view class="empty" wx:if="{{!ready}}">加载中…</view>
+<view wx:if="{{loading}}">
+  <view class="empty">加载中…</view>
+</view>
+
+<!-- 学员 -->
+<block wx:elif="{{role === 'student'}}">
+  <view class="card">
+    <view class="sec-title">我的老师</view>
+    <view class="row item" wx:for="{{relations}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapBook">
+      <text class="name">{{item.teacherName}}</text>
+      <text class="link">预约 ›</text>
+    </view>
+    <view class="empty" wx:if="{{!relations.length}}">购买套餐后建立师生关系</view>
+  </view>
+  <view class="card">
+    <view class="sec-title">我的预约</view>
+    <view class="row item" wx:for="{{appointments}}" wx:key="id">
+      <text>{{item.date}} {{item.start}}</text>
+      <text class="cancel" wx:if="{{item.status === 'booked'}}" data-id="{{item.id}}" catchtap="onTapCancel">取消</text>
+      <text class="muted" wx:else>{{item.status}}</text>
+    </view>
+    <view class="empty" wx:if="{{!appointments.length}}">暂无预约</view>
+  </view>
+</block>
+
+<!-- 老师 -->
+<block wx:else>
+  <view class="card">
+    <view class="sec-title">预约列表</view>
+    <view class="row item" wx:for="{{appointments}}" wx:key="id">
+      <text>{{item.date}} {{item.start}}</text>
+      <text class="muted">{{item.status}}</text>
+    </view>
+    <view class="empty" wx:if="{{!appointments.length}}">暂无预约</view>
+  </view>
+</block>

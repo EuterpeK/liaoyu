@@ -5,7 +5,8 @@
     "pages/profile/profile",
     "pages/login/login",
     "pages/teacher/detail/detail",
-    "pages/package/buy/buy"
+    "pages/package/buy/buy",
+    "pages/appointment/book/book"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",
