@@ -28,6 +28,7 @@ pnpm check    # Biome + tsc + Vitest（需先 pnpm db:up）
 ## 目录
 
 - `apps/server/src/modules/*`：按业务域划分，`routes.ts` 只做校验与调用，`service.ts` 负责事务与 IO
+- `apps/miniprogram/`：微信原生小程序端（学员/老师双角色），用开发者工具指向该目录打开；接口走 `apps/server`（开发环境勾选「不校验合法域名」直连 `http://localhost:8700`）
 - `apps/server/src/domain/*`：纯函数（分段改写等），不碰数据库
 - `apps/server/src/jobs/*`：pg-boss 定时任务
 - `deploy/`：开发与生产的 Docker Compose、Caddy、备份脚本

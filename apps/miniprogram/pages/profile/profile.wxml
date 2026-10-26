@@ -1,1 +1,8 @@
-<view class="empty" wx:if="{{!ready}}">加载中…</view>
+<view class="card" wx:if="{{me}}">
+  <view class="name">{{me.user.nickname || '用户' + me.user.id}}</view>
+  <view class="muted">
+    {{me.role === 'teacher' ? '老师 · Lv' + me.teacher.level + ' · ' + me.teacher.displayName : '学员'}}
+  </view>
+</view>
+<view class="card muted" wx:if="{{me}}">ID: {{me.user.id}}</view>
+<button class="btn" bindtap="onTapSwitch">切换账号（重新登录）</button>
