@@ -1,0 +1,10 @@
+<view class="card">
+  <view class="row">
+    <text class="name">{{title}}</text>
+    <text class="price">¥{{yuan}}</text>
+  </view>
+  <view class="muted">支付后自动建立师生服务关系</view>
+</view>
+<button class="btn" disabled="{{paying || paid}}" bindtap="onTapPay">
+  {{paid ? '已支付' : paying ? '支付中…' : '立即支付'}}
+</button>

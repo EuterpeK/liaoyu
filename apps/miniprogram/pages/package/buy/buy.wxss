@@ -1,0 +1,14 @@
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+.name {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+.price {
+  color: #e6533c;
+  font-weight: 700;
+  font-size: 36rpx;
+}

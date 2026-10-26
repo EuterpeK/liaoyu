@@ -3,7 +3,9 @@
     "pages/index/index",
     "pages/services/services",
     "pages/profile/profile",
-    "pages/login/login"
+    "pages/login/login",
+    "pages/teacher/detail/detail",
+    "pages/package/buy/buy"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",
