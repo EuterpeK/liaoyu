@@ -9,7 +9,8 @@
     "test": "vitest run",
     "typecheck": "tsc",
     "db:generate": "drizzle-kit generate",
-    "create-admin": "node --env-file-if-exists=.env src/scripts/create-admin.ts"
+    "create-admin": "node --env-file-if-exists=.env src/scripts/create-admin.ts",
+    "seed": "node --env-file-if-exists=.env src/scripts/seed-dev.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.3",
