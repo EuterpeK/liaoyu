@@ -1,21 +1,57 @@
-.row {
+.hero {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8rpx;
+  margin-top: 32rpx;
+}
+.avatar.big {
+  width: 128rpx;
+  height: 128rpx;
+  font-size: 56rpx;
+}
+.hero-body {
+  margin-left: 28rpx;
+  flex: 1;
+}
+.line {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
 }
 .name {
-  font-size: 32rpx;
-  font-weight: 600;
+  font-size: 40rpx;
+  font-weight: 700;
 }
-.level {
-  color: #1677ff;
-  font-size: 24rpx;
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 14rpx;
+}
+.intro {
+  font-size: 26rpx;
+  line-height: 1.8;
+}
+.pkg-title {
+  font-size: 32rpx;
+  font-weight: 700;
 }
 .price {
-  color: #e6533c;
-  font-weight: 600;
+  color: #d38b3c;
+  font-weight: 700;
+  font-size: 38rpx;
 }
-.buy-btn {
-  margin-top: 16rpx;
+.feats {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 14rpx;
+}
+.feat {
+  font-size: 22rpx;
+  color: #4a6b5a;
+  background: rgba(60, 180, 124, 0.12);
+  border-radius: 999rpx;
+  padding: 6rpx 20rpx;
+  margin: 0 12rpx 12rpx 0;
+}
+.pkg-btn {
+  margin-top: 10rpx;
 }

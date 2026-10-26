@@ -1,7 +1,30 @@
-<view class="login">
+<view class="wrap">
   <view class="logo">LiaoYu</view>
-  <view class="muted">陪伴咨询平台</view>
-  <button class="btn login-btn" disabled="{{loading}}" bindtap="onTapLogin">
-    {{loading ? '登录中…' : '微信一键登录'}}
+  <view class="slogan">把心事，说给懂的人听</view>
+
+  <button class="btn login-btn" disabled="{{!!loading}}" bindtap="onTapLogin">
+    {{loading === 'wx' ? '登录中…' : '微信一键登录'}}
   </button>
+
+  <view class="dev glass">
+    <view class="dev-title">开发测试账号</view>
+    <view class="dev-hint">需先运行 pnpm -F @liaoyu/server seed</view>
+    <view class="group" wx:for="{{[0, 1]}}" wx:key="*this">
+      <view class="group-label">{{item === 0 ? '学员' : '老师'}}</view>
+      <view class="accs">
+        <view
+          wx:for="{{accounts}}"
+          wx:for-item="acc"
+          wx:key="code"
+          wx:if="{{(item === 0) === (acc.role === '学员')}}"
+          class="acc {{loading === acc.code ? 'acc-loading' : ''}}"
+          data-code="{{acc.code}}"
+          bindtap="onTapAccount"
+        >
+          <view class="acc-name">{{acc.label}}</view>
+          <view class="acc-role">{{acc.role}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

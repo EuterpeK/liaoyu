@@ -1,16 +1,35 @@
-<view class="card" wx:if="{{t}}">
-  <view class="row">
-    <text class="name">{{t.displayName}}</text>
-    <text class="level">Lv{{t.level}}</text>
+<block wx:if="{{t}}">
+  <view class="hero glass">
+    <view class="avatar tone-0 big">{{t.initial}}</view>
+    <view class="hero-body">
+      <view class="line">
+        <text class="name">{{t.displayName}}</text>
+        <text class="level">Lv{{t.level}}</text>
+      </view>
+      <view class="tags">
+        <text class="tag" wx:for="{{t.directions}}" wx:key="*this">{{item}}</text>
+      </view>
+    </view>
   </view>
-  <view class="muted">{{t.intro}}</view>
-</view>
-<view class="card" wx:for="{{packages}}" wx:key="id">
-  <view class="row">
-    <text class="name">{{item.title}}</text>
-    <text class="price">¥{{item.yuan}}</text>
+  <view class="glass">
+    <view class="muted intro">{{t.intro}}</view>
   </view>
-  <view class="muted">{{item.typeText}} · {{item.replyHours}}小时内回复 · 通话额度 {{item.callQuota}}</view>
-  <button class="btn buy-btn" data-id="{{item.id}}" bindtap="onTapBuy">购买</button>
-</view>
-<view class="empty" wx:if="{{t && !packages.length}}">该老师暂无在售套餐</view>
+
+  <view class="sec">
+    <text class="sec-title">陪伴套餐</text>
+    <text class="muted sec-sub">选择一种节奏，开始同行</text>
+  </view>
+  <view class="glass pkg" wx:for="{{packages}}" wx:key="id">
+    <view class="line">
+      <text class="pkg-title">{{item.title}}</text>
+      <text class="price">¥{{item.yuan}}</text>
+    </view>
+    <view class="feats">
+      <text class="feat">{{item.typeText}}</text>
+      <text class="feat">{{item.replyHours}}小时内回复</text>
+      <text class="feat" wx:if="{{item.callQuota}}">通话 ×{{item.callQuota}}</text>
+    </view>
+    <button class="btn pkg-btn" data-id="{{item.id}}" bindtap="onTapBuy">选择这个节奏</button>
+  </view>
+  <view class="empty" wx:if="{{!packages.length}}">该老师暂无在售套餐</view>
+</block>

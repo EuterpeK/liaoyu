@@ -1,10 +1,13 @@
-<view class="card">
-  <view class="row">
-    <text class="name">{{title}}</text>
+<view class="glass order">
+  <view class="order-label">确认订单</view>
+  <view class="line">
+    <text class="title">{{title}}</text>
     <text class="price">¥{{yuan}}</text>
   </view>
-  <view class="muted">支付后自动建立师生服务关系</view>
+  <view class="muted">支付后立即开启专属陪伴服务</view>
 </view>
-<button class="btn" disabled="{{paying || paid}}" bindtap="onTapPay">
-  {{paid ? '已支付' : paying ? '支付中…' : '立即支付'}}
-</button>
+<view class="pay-wrap">
+  <button class="btn pay-btn" disabled="{{paying || paid}}" bindtap="onTapPay">
+    {{paid ? '已开启 ✓' : paying ? '正在开启…' : '立即开启'}}
+  </button>
+</view>

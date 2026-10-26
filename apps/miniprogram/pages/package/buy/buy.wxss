@@ -1,14 +1,27 @@
-.row {
+.order {
+  margin-top: 32rpx;
+}
+.order-label {
+  font-size: 24rpx;
+  color: #6f8b7d;
+  letter-spacing: 4rpx;
+  margin-bottom: 16rpx;
+}
+.line {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8rpx;
+  align-items: center;
+  margin-bottom: 12rpx;
 }
-.name {
-  font-size: 32rpx;
-  font-weight: 600;
+.title {
+  font-size: 34rpx;
+  font-weight: 700;
 }
 .price {
-  color: #e6533c;
+  color: #d38b3c;
   font-weight: 700;
-  font-size: 36rpx;
+  font-size: 44rpx;
+}
+.pay-wrap {
+  margin: 48rpx 48rpx 0;
 }

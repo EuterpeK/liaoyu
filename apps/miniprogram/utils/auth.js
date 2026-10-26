@@ -63,4 +63,13 @@ function relogin() {
   return reloginPromise;
 }
 
-module.exports = { ensureLogin, relogin, fetchMe, withRole, getToken };
+/** 以指定 code 登录（开发测试账号切换） */
+async function loginAs(code) {
+  wx.removeStorageSync(TOKEN_KEY);
+  getApp().resetLogin();
+  const res = await raw('POST', '/api/auth/wxlogin', { code });
+  wx.setStorageSync(TOKEN_KEY, res.token);
+  return withRole(await fetchMe());
+}
+
+module.exports = { ensureLogin, relogin, loginAs, fetchMe, withRole, getToken };

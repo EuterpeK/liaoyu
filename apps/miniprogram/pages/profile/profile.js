@@ -1,12 +1,13 @@
 const auth = require('../../utils/auth.js');
 
 Page({
-  data: { me: null },
+  data: { me: null, initial: '?' },
 
   async onShow() {
     try {
       const me = await getApp().ensureLoginReady();
-      this.setData({ me });
+      const displayName = me.role === 'teacher' ? me.teacher.displayName : me.user.nickname;
+      this.setData({ me, initial: (displayName || `U${me.user.id}`)[0] });
     } catch (e) {
       wx.reLaunch({ url: '/pages/login/login' });
     }

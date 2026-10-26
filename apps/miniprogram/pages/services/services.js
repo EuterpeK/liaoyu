@@ -15,6 +15,7 @@ Page({
             ...a,
             hm: hm(a.startAt),
             statusText: STATUS_TEXT[a.status] || a.status,
+            initial: (a.userNickname || '学')[0],
           })),
           loading: false,
         });
@@ -24,7 +25,7 @@ Page({
           api.get('/api/appointments', { silent: true }).catch(() => []),
         ]);
         this.setData({
-          relations,
+          relations: relations.map((r) => ({ ...r, initial: (r.teacherName || '师')[0] })),
           appointments: appointments.map((a) => ({
             ...a,
             hm: hm(a.startAt),

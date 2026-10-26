@@ -1,8 +1,17 @@
-<view class="card" wx:if="{{me}}">
-  <view class="name">{{me.user.nickname || '用户' + me.user.id}}</view>
-  <view class="muted">
-    {{me.role === 'teacher' ? '老师 · Lv' + me.teacher.level + ' · ' + me.teacher.displayName : '学员'}}
+<block wx:if="{{me}}">
+  <view class="hero glass">
+    <view class="avatar tone-0 big">{{initial}}</view>
+    <view class="hero-body">
+      <view class="name">{{me.user.nickname || '用户' + me.user.id}}</view>
+      <view class="role-badge" wx:if="{{me.role === 'teacher'}}">老师 · Lv{{me.teacher.level}} · {{me.teacher.displayName}}</view>
+      <view class="role-badge student" wx:else>学员</view>
+    </view>
   </view>
-</view>
-<view class="card muted" wx:if="{{me}}">ID: {{me.user.id}}</view>
-<button class="btn" bindtap="onTapSwitch">切换账号（重新登录）</button>
+  <view class="glass row">
+    <text class="muted">用户 ID</text>
+    <text class="val">{{me.user.id}}</text>
+  </view>
+  <view class="signout-wrap">
+    <button class="btn-ghost" bindtap="onTapSwitch">切换账号（重新登录）</button>
+  </view>
+</block>

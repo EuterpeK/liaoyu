@@ -1,9 +1,14 @@
 <view wx:if="{{loading}}">
-  <view class="empty">加载中…</view>
+  <view class="empty">正在为你准备…</view>
 </view>
 
 <!-- 学员：老师列表 -->
 <block wx:elif="{{role === 'student'}}">
+  <view class="hero">
+    <view class="hero-title">今天，想聊聊什么？</view>
+    <view class="hero-sub">每一位老师，都在这里陪你</view>
+  </view>
+
   <view class="filter" wx:if="{{directions.length}}">
     <view
       wx:for="{{directions}}"
@@ -13,34 +18,41 @@
       bindtap="onTapDirection"
     >{{item}}</view>
   </view>
-  <view class="card" wx:for="{{teachers}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapTeacher">
-    <view class="row">
-      <text class="name">{{item.displayName}}</text>
-      <text class="level">Lv{{item.level}}</text>
-    </view>
-    <view class="muted">{{item.intro}}</view>
-    <view class="row">
-      <text class="muted" wx:for="{{item.directions}}" wx:for-item="d" wx:key="*this">{{d}} </text>
-      <text class="price" wx:if="{{item.minPriceCents}}">¥{{item.minPriceCents / 100}} 起</text>
+
+  <view class="glass teacher" wx:for="{{teachers}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapTeacher">
+    <view class="avatar tone-{{item.tone}}">{{item.initial}}</view>
+    <view class="body">
+      <view class="line">
+        <text class="name">{{item.displayName}}</text>
+        <text class="level">Lv{{item.level}}</text>
+      </view>
+      <view class="muted intro">{{item.intro}}</view>
+      <view class="line bottom">
+        <view class="tags">
+          <text class="tag" wx:for="{{item.directions}}" wx:for-item="d" wx:key="*this">{{d}}</text>
+        </view>
+        <text class="price" wx:if="{{item.minPriceCents}}">¥{{item.yuan}}<text class="price-unit"> 起</text></text>
+      </view>
     </view>
   </view>
-  <view class="empty" wx:if="{{!teachers.length}}">暂无老师入驻</view>
+  <view class="empty" wx:if="{{!teachers.length}}">老师们正在路上，稍等片刻</view>
 </block>
 
 <!-- 老师：今日概览 -->
 <block wx:else>
-  <view class="card">
-    <view class="row">
-      <text class="name">今日概览</text>
-      <text class="muted">{{todayLabel}}</text>
-    </view>
-    <view class="muted">共 {{appointments.length}} 条预约</view>
+  <view class="hero">
+    <view class="hero-title">今日概览</view>
+    <view class="hero-sub">{{todayLabel}} · 共 {{appointments.length}} 条预约</view>
   </view>
-  <view class="card" wx:for="{{appointments}}" wx:key="id">
-    <view class="row">
-      <text>{{item.date}} {{item.hm}} {{item.userNickname || ''}}</text>
-      <text class="muted">{{item.statusText}}</text>
+  <view class="glass appt" wx:for="{{appointments}}" wx:key="id">
+    <view class="avatar tone-{{index % 4}}">{{item.initial}}</view>
+    <view class="appt-body">
+      <view class="line">
+        <text class="name">{{item.userNickname || '学员'}}</text>
+        <text class="status">{{item.statusText}}</text>
+      </view>
+      <view class="muted">{{item.date}} · {{item.hm}}</view>
     </view>
   </view>
-  <view class="empty" wx:if="{{!appointments.length}}">暂无预约</view>
+  <view class="empty" wx:if="{{!appointments.length}}">今天还没有预约，安心休息</view>
 </block>

@@ -9,14 +9,16 @@
     "pages/appointment/book/book"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarBackgroundColor": "#e8f3ec",
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "LiaoYu",
-    "backgroundColor": "#f5f6f8"
+    "backgroundColor": "#e8f3ec"
   },
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#1677ff",
+    "color": "#8fa89b",
+    "selectedColor": "#1d7a52",
+    "backgroundColor": "#f7fbf8",
+    "borderStyle": "white",
     "list": [
       { "pagePath": "pages/index/index", "text": "首页" },
       { "pagePath": "pages/services/services", "text": "服务" },

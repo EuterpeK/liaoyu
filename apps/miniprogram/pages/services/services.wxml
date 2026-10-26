@@ -1,36 +1,56 @@
 <view wx:if="{{loading}}">
-  <view class="empty">加载中…</view>
+  <view class="empty">正在为你准备…</view>
 </view>
 
 <!-- 学员 -->
 <block wx:elif="{{role === 'student'}}">
-  <view class="card">
-    <view class="sec-title">我的老师</view>
-    <view class="row item" wx:for="{{relations}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapBook">
-      <text class="name">{{item.teacherName}}</text>
-      <text class="link">预约 ›</text>
-    </view>
-    <view class="empty" wx:if="{{!relations.length}}">购买套餐后建立师生关系</view>
+  <view class="hero">
+    <view class="hero-title">我的服务</view>
+    <view class="hero-sub">正在同行的老师与预约</view>
   </view>
-  <view class="card">
-    <view class="sec-title">我的预约</view>
-    <view class="row item" wx:for="{{appointments}}" wx:key="id">
-      <text>{{item.date}} {{item.hm}}</text>
-      <text class="cancel" wx:if="{{item.status === 'booked'}}" data-id="{{item.id}}" catchtap="onTapCancel">取消</text>
-      <text class="muted" wx:else>{{item.statusText}}</text>
+  <view class="glass">
+    <view class="sec-title in-card">我的老师</view>
+    <view class="rel" wx:for="{{relations}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapBook">
+      <view class="avatar tone-{{index % 4}}">{{item.initial}}</view>
+      <view class="rel-body">
+        <view class="name">{{item.teacherName}}</view>
+        <view class="muted">服务期至 {{item.endDate}}</view>
+      </view>
+      <text class="link">去预约 ›</text>
     </view>
-    <view class="empty" wx:if="{{!appointments.length}}">暂无预约</view>
+    <view class="empty" wx:if="{{!relations.length}}">购买套餐后，老师会出现在这里</view>
+  </view>
+  <view class="glass">
+    <view class="sec-title in-card">我的预约</view>
+    <view class="appt" wx:for="{{appointments}}" wx:key="id">
+      <view class="appt-body">
+        <view class="line">
+          <text class="name">{{item.teacherName}}</text>
+          <text class="cancel" wx:if="{{item.status === 'booked'}}" data-id="{{item.id}}" catchtap="onTapCancel">取消</text>
+          <text class="muted" wx:else>{{item.statusText}}</text>
+        </view>
+        <view class="muted">{{item.date}} · {{item.hm}}</view>
+      </view>
+    </view>
+    <view class="empty" wx:if="{{!appointments.length}}">还没有预约</view>
   </view>
 </block>
 
 <!-- 老师 -->
 <block wx:else>
-  <view class="card">
-    <view class="sec-title">预约列表</view>
-    <view class="row item" wx:for="{{appointments}}" wx:key="id">
-      <text>{{item.date}} {{item.hm}} {{item.userNickname || ''}}</text>
-      <text class="muted">{{item.statusText}}</text>
-    </view>
-    <view class="empty" wx:if="{{!appointments.length}}">暂无预约</view>
+  <view class="hero">
+    <view class="hero-title">预约列表</view>
+    <view class="hero-sub">来自学员的约定</view>
   </view>
+  <view class="glass appt" wx:for="{{appointments}}" wx:key="id">
+    <view class="avatar tone-{{index % 4}}">{{item.initial}}</view>
+    <view class="appt-body">
+      <view class="line">
+        <text class="name">{{item.userNickname || '学员'}}</text>
+        <text class="muted">{{item.statusText}}</text>
+      </view>
+      <view class="muted">{{item.date}} · {{item.hm}}</view>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{!appointments.length}}">还没有预约</view>
 </block>

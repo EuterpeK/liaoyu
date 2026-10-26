@@ -19,7 +19,10 @@ Page({
     this.setData({ loading: true });
     const q = this.data.direction ? `?direction=${encodeURIComponent(this.data.direction)}` : '';
     const teachers = await api.get(`/api/teachers${q}`, { silent: true }).catch(() => []);
-    this.setData({ teachers, loading: false });
+    this.setData({
+      teachers: teachers.map((t, i) => ({ ...t, initial: (t.displayName || '?')[0], tone: i % 4, yuan: (t.minPriceCents / 100).toFixed(0) })),
+      loading: false,
+    });
   },
 
   async loadTeacherHome() {
@@ -29,6 +32,7 @@ Page({
         ...a,
         hm: hm(a.startAt),
         statusText: STATUS_TEXT[a.status] || a.status,
+        initial: (a.userNickname || '学')[0],
       })),
       todayLabel: ymd(new Date()),
       loading: false,

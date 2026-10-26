@@ -1,15 +1,66 @@
-.login {
+.wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 240rpx;
+  padding: 90rpx 0 60rpx;
 }
 .logo {
-  font-size: 64rpx;
-  font-weight: 700;
-  margin-bottom: 12rpx;
+  font-size: 72rpx;
+  font-weight: 800;
+  letter-spacing: 4rpx;
+  color: #1d5c3f;
+}
+.slogan {
+  margin-top: 14rpx;
+  color: #6f8b7d;
+  font-size: 26rpx;
+  letter-spacing: 6rpx;
 }
 .login-btn {
-  width: 80%;
-  margin-top: 120rpx;
+  width: 78%;
+  margin-top: 60rpx;
+}
+.dev {
+  width: 86%;
+  margin-top: 64rpx;
+}
+.dev-title {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+.dev-hint {
+  margin: 6rpx 0 20rpx;
+}
+.group {
+  margin-bottom: 18rpx;
+}
+.group-label {
+  font-size: 24rpx;
+  color: #6f8b7d;
+  margin-bottom: 12rpx;
+}
+.accs {
+  display: flex;
+  flex-wrap: wrap;
+}
+.acc {
+  width: 180rpx;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1rpx solid rgba(46, 158, 107, 0.25);
+  border-radius: 20rpx;
+  padding: 16rpx 0;
+  text-align: center;
+  margin: 0 14rpx 14rpx 0;
+}
+.acc-loading {
+  opacity: 0.5;
+}
+.acc-name {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+.acc-role {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #6f8b7d;
 }
