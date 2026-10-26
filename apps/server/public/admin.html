@@ -168,9 +168,25 @@ async function api(path, opts = {}) {
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
-  if (res.status === 401) { showLogin(); throw new Error('未登录'); }
+  if (res.status === 401 && !path.startsWith('/login')) {
+    showLogin();
+    throw new Error('登录已过期，请重新登录');
+  }
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || '请求失败');
   return res.json();
+}
+/* 任何未捕获的脚本错误都直接显示在页面上，便于排查 */
+window.onerror = (msg) => showFatal('脚本错误: ' + msg);
+window.onunhandledrejection = (e) => showFatal('请求错误: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+function showFatal(msg) {
+  let bar = document.getElementById('fatal');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'fatal';
+    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:#c05a3c;color:#fff;font-size:13px;padding:8px 16px;';
+    document.body.appendChild(bar);
+  }
+  bar.textContent = msg;
 }
 const yuan = (c) => '¥' + (c / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2 });
 const dt = (iso) => (iso ? new Date(iso).toLocaleString('zh-CN', { hour12: false }) : '—');
@@ -186,13 +202,18 @@ function showLogin() {
 }
 $('#btn-login').onclick = async () => {
   $('#login-err').textContent = '';
+  const btn = $('#btn-login');
+  btn.disabled = true;
+  btn.textContent = '登录中…';
   try {
     const me = await api('/login', { method: 'POST', body: { username: $('#username').value.trim(), password: $('#password').value } });
     sessionStorage.setItem('liaoyu_admin', me.username);
-    enter(me.username);
+    await enter(me.username);
   } catch (e) {
-    $('#login-err').textContent = e.message;
+    $('#login-err').textContent = e.message === '请求失败' ? '网络异常或服务未启动' : e.message;
   }
+  btn.disabled = false;
+  btn.textContent = '登 录';
 };
 $('#password').addEventListener('keydown', (e) => e.key === 'Enter' && $('#btn-login').click());
 $('#btn-logout').onclick = async () => {
