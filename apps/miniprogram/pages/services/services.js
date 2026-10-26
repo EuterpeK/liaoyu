@@ -1,4 +1,5 @@
 const api = require('../../utils/request.js');
+const { hm } = require('../../utils/format.js');
 
 Page({
   data: { role: 'student', loading: true, relations: [], appointments: [] },
@@ -9,13 +10,17 @@ Page({
       this.setData({ role: me.role });
       if (me.role === 'teacher') {
         const appointments = await api.get('/api/teacher/appointments', { silent: true }).catch(() => []);
-        this.setData({ appointments, loading: false });
+        this.setData({ appointments: appointments.map((a) => ({ ...a, hm: hm(a.startAt) })), loading: false });
       } else {
         const [relations, appointments] = await Promise.all([
           api.get('/api/relations', { silent: true }).catch(() => []),
           api.get('/api/appointments', { silent: true }).catch(() => []),
         ]);
-        this.setData({ relations, appointments, loading: false });
+        this.setData({
+          relations,
+          appointments: appointments.map((a) => ({ ...a, hm: hm(a.startAt) })),
+          loading: false,
+        });
       }
     } catch (e) {
       wx.redirectTo({ url: '/pages/login/login' });

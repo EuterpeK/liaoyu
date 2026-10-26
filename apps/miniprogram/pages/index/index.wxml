@@ -38,7 +38,7 @@
   </view>
   <view class="card" wx:for="{{appointments}}" wx:key="id">
     <view class="row">
-      <text>{{item.date}} {{item.start}}</text>
+      <text>{{item.date}} {{item.hm}}</text>
       <text class="muted">{{item.status}}</text>
     </view>
   </view>

@@ -15,4 +15,11 @@ function nextDays(n) {
   });
 }
 
-module.exports = { FEN, ymd, nextDays };
+/** ISO 时间串 → 本地 "HH:MM" */
+const hm = (iso) => {
+  const d = new Date(iso);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
+module.exports = { FEN, ymd, nextDays, hm };

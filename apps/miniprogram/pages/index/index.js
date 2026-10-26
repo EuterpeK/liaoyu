@@ -1,4 +1,5 @@
 const api = require('../../utils/request.js');
+const { hm } = require('../../utils/format.js');
 
 Page({
   data: { role: 'student', loading: true, teachers: [], directions: [], direction: '', appointments: [], todayLabel: '' },
@@ -23,7 +24,11 @@ Page({
 
   async loadTeacherHome() {
     const appointments = await api.get('/api/teacher/appointments', { silent: true }).catch(() => []);
-    this.setData({ appointments, todayLabel: new Date().toLocaleDateString('zh-CN'), loading: false });
+    this.setData({
+      appointments: appointments.map((a) => ({ ...a, hm: hm(a.startAt) })),
+      todayLabel: new Date().toLocaleDateString('zh-CN'),
+      loading: false,
+    });
   },
 
   onTapDirection(e) {

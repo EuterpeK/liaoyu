@@ -1,1 +1,28 @@
-<view class="empty">加载中…</view>
+<view class="card">
+  <view class="name">{{name}}</view>
+  <view class="days">
+    <view
+      wx:for="{{days}}"
+      wx:key="date"
+      class="day {{date === item.date ? 'day-on' : ''}}"
+      data-d="{{item.date}}"
+      bindtap="onTapDay"
+    >{{item.label}}</view>
+  </view>
+</view>
+<view class="card">
+  <view class="sec-title">可约时段（{{date}}）</view>
+  <view class="slots">
+    <view
+      wx:for="{{slots}}"
+      wx:key="*this"
+      class="slot {{chosen === item ? 'slot-on' : ''}}"
+      data-s="{{item}}"
+      bindtap="onTapSlot"
+    >{{item}}</view>
+  </view>
+  <view class="empty" wx:if="{{!slots.length}}">该日期暂无可约时段</view>
+</view>
+<button class="btn" disabled="{{!chosen || booking}}" bindtap="onTapBook">
+  {{booking ? '预约中…' : chosen ? '预约 ' + date + ' ' + chosen : '请先选择时段'}}
+</button>
