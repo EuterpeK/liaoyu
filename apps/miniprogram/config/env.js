@@ -3,7 +3,7 @@ const ENV = 'dev';
 
 const BASE_URLS = {
   // 云工作区 IP（微信开发者工具运行在 Mac 上，localhost 指向 Mac 本机，须直连工作区）
-  dev: 'http://21.91.250.149:8700',
+  dev: 'http://21.91.250.149:10001',
   prod: 'https://CHANGE_ME.example.com',
 };
 
