@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LiaoYu 管理台</title>
+<script>
+  /* 最早注册的错误捕获：主脚本哪怕解析失败，错误也会顶到页面上 */
+  window.onerror = function (msg, src, line, col) {
+    var bar = document.getElementById('fatal') || document.body.appendChild(document.createElement('div'));
+    bar.id = 'fatal';
+    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#c05a3c;color:#fff;font-size:13px;padding:8px 16px;';
+    bar.textContent = '脚本错误: ' + msg + ' @' + (line || '?') + ':' + (col || '?');
+  };
+  window.onunhandledrejection = function (e) {
+    var r = e && e.reason;
+    window.onerror('未处理的请求错误: ' + (r && r.message ? r.message : r));
+  };
+</script>
 <style>
   :root {
     --ink: #1f3b2c;
@@ -175,9 +188,14 @@ async function api(path, opts = {}) {
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || '请求失败');
   return res.json();
 }
-/* 任何未捕获的脚本错误都直接显示在页面上，便于排查 */
-window.onerror = (msg) => showFatal('脚本错误: ' + msg);
-window.onunhandledrejection = (e) => showFatal('请求错误: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+/* 任何未捕获的脚本错误都直接显示在页面上，便于排查（保留头部捕获的升级版：带文件位置） */
+window.onerror = function (msg, src, line, col) {
+  showFatal('脚本错误: ' + msg + ' @' + (line || '?') + ':' + (col || '?'));
+};
+window.onunhandledrejection = function (e) {
+  var r = e && e.reason;
+  showFatal('请求错误: ' + (r && r.message ? r.message : r));
+};
 function showFatal(msg) {
   let bar = document.getElementById('fatal');
   if (!bar) {
@@ -437,7 +455,7 @@ async function renderAudit(el) {
             <td style="white-space:nowrap">${dt(l.createdAt)}</td>
             <td><span class="pill green">${esc(l.action)}</span></td>
             <td class="mono">${esc(l.target)}</td>
-            <td>${l.adminId ?? '—'}</td>
+            <td>${l.adminId === undefined || l.adminId === null ? '—' : l.adminId}</td>
             <td class="detail">${esc(JSON.stringify(l.detail))}</td>
           </tr>`).join('')}</table>` : '<div class="empty">暂无日志</div>'}
     </div>`;

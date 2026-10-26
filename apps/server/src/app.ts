@@ -56,7 +56,10 @@ export async function buildApp(deps: Deps): Promise<App> {
 
   app.get('/admin', { schema: { hide: true } }, async (_req, reply) => {
     const html = await readFile(new URL('../public/admin.html', import.meta.url), 'utf8');
-    return reply.type('text/html; charset=utf-8').send(html);
+    return reply
+      .type('text/html; charset=utf-8')
+      .header('cache-control', 'no-store')
+      .send(html);
   });
 
   await registerRoutes(app, deps);
