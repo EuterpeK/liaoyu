@@ -10,6 +10,7 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
+import type { AdminRole } from './db/schema.ts';
 import type { Deps } from './deps.ts';
 import { HttpError } from './lib/errors.ts';
 import { type App, registerRoutes } from './routes.ts';
@@ -22,6 +23,7 @@ declare module 'fastify' {
   interface FastifyRequest {
     userId: number;
     adminId: number;
+    adminRole: AdminRole;
   }
 }
 
@@ -35,6 +37,7 @@ export async function buildApp(deps: Deps): Promise<App> {
   app.setSerializerCompiler(serializerCompiler);
   app.decorateRequest('userId', 0);
   app.decorateRequest('adminId', 0);
+  app.decorateRequest('adminRole', 'super');
 
   app.setErrorHandler((err: FastifyError, req, reply) => {
     if (err instanceof HttpError) return reply.status(err.status).send({ error: err.message });

@@ -36,6 +36,13 @@
       "when": 1793022225084,
       "tag": "0004_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793177964489,
+      "tag": "0005_admin_roles",
+      "breakpoints": true
     }
   ]
 }

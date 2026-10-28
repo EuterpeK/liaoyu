@@ -3,6 +3,7 @@ import { buildApp } from '../src/app.ts';
 import { type Config, loadConfig } from '../src/config.ts';
 import type { DbOrTx } from '../src/db/client.ts';
 import {
+  type AdminRole,
   notifications,
   packages,
   serviceRelations,
@@ -128,8 +129,13 @@ export async function loginUser(ctx: Ctx, code: string): Promise<{ token: string
   return { token: body.token, userId: body.user.id };
 }
 
-export async function adminCookie(ctx: Ctx, username = 'boss', password = 'password-123'): Promise<string> {
-  await upsertAdmin(ctx.db, username, password);
+export async function adminCookie(
+  ctx: Ctx,
+  username = 'boss',
+  password = 'password-123',
+  role: AdminRole = 'super',
+): Promise<string> {
+  await upsertAdmin(ctx.db, username, password, role);
   const res = await call(ctx, 'POST', '/api/admin/login', { body: { username, password } });
   const c = res.cookies.find((x) => x.name === ADMIN_COOKIE);
   if (!c) throw new Error(`管理员登录失败: ${res.body}`);

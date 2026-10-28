@@ -27,8 +27,10 @@ export const orderStatus = pgEnum('order_status', ['pending', 'paid']);
 export const relationStatus = pgEnum('relation_status', ['active', 'ended', 'refunded', 'switched']);
 export const segmentKind = pgEnum('segment_kind', ['normal', 'substitute', 'paused']);
 export const settlementStatus = pgEnum('settlement_status', ['pending', 'paid']);
+export const adminRole = pgEnum('admin_role', ['super', 'ops', 'finance']);
 
 export type TeacherStatus = (typeof teacherStatus.enumValues)[number];
+export type AdminRole = (typeof adminRole.enumValues)[number];
 export type PackageType = (typeof packageType.enumValues)[number];
 
 export interface PackageSnapshot {
@@ -51,6 +53,8 @@ export const admins = pgTable('admins', {
   id: id(),
   username: text('username').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  role: adminRole('role').notNull().default('super'),
+  disabledAt: tstz('disabled_at'),
   createdAt: createdAt(),
 });
 

@@ -58,7 +58,7 @@ export const adminAuthRoutes =
 
     app.get('/me', { preHandler: adminGuard(deps) }, async (req) => {
       const [a] = await deps.db
-        .select({ id: admins.id, username: admins.username })
+        .select({ id: admins.id, username: admins.username, role: admins.role })
         .from(admins)
         .where(eq(admins.id, req.adminId));
       return a;

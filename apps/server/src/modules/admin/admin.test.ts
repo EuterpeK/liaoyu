@@ -1,7 +1,8 @@
+import { eq } from 'drizzle-orm';
 import { describe, expect, test } from 'vitest';
 import { adminCookie, call, loginUser, setup } from '../../../tests/helpers.ts';
 import { buildApp } from '../../app.ts';
-import { auditLogs } from '../../db/schema.ts';
+import { admins, auditLogs } from '../../db/schema.ts';
 import { createDeps } from '../../deps.ts';
 import { fixedClock } from '../../lib/clock.ts';
 import { ADMIN_COOKIE, upsertAdmin } from './service.ts';
@@ -68,5 +69,27 @@ describe('管理员登录', () => {
     expect(new Date(logs[0].createdAt).getTime()).toBeGreaterThanOrEqual(
       new Date(logs[logs.length - 1].createdAt).getTime(),
     );
+  });
+});
+
+describe('管理员角色', () => {
+  test('默认 super，可指定角色；login 返回 role', async () => {
+    const ctx = await setup();
+    await upsertAdmin(ctx.db, 'boss', 'password-123');
+    await upsertAdmin(ctx.db, 'fin', 'password-123', 'finance');
+    const rows = await ctx.db.select().from(admins);
+    expect(Object.fromEntries(rows.map((r) => [r.username, r.role]))).toEqual({ boss: 'super', fin: 'finance' });
+    const login = await call(ctx, 'POST', '/api/admin/login', { body: { username: 'fin', password: 'password-123' } });
+    expect(login.json()).toMatchObject({ username: 'fin', role: 'finance' });
+  });
+
+  test('停用账号：不能登录，已有会话立即失效', async () => {
+    const ctx = await setup();
+    const cookie = await adminCookie(ctx, 'ops1', 'password-123', 'ops');
+    expect((await call(ctx, 'GET', '/api/admin/me', { cookie })).statusCode).toBe(200);
+    await ctx.db.update(admins).set({ disabledAt: new Date() }).where(eq(admins.username, 'ops1'));
+    expect((await call(ctx, 'GET', '/api/admin/me', { cookie })).statusCode).toBe(401);
+    const res = await call(ctx, 'POST', '/api/admin/login', { body: { username: 'ops1', password: 'password-123' } });
+    expect(res.statusCode).toBe(401);
   });
 });
