@@ -10,17 +10,18 @@ import { listTeachersForAdmin, reviewTeacher } from './service.ts';
 export const adminTeacherRoutes =
   (deps: Deps): FastifyPluginAsyncZod =>
   async (app) => {
-    app.addHook('preHandler', adminGuard(deps));
+    const onRequest = adminGuard(deps, 'ops');
 
     app.get(
       '/',
-      { schema: { querystring: z.object({ status: z.enum(teacherStatus.enumValues).optional() }) } },
+      { onRequest, schema: { querystring: z.object({ status: z.enum(teacherStatus.enumValues).optional() }) } },
       async (req) => listTeachersForAdmin(deps.db, deps.config.fieldKey, req.query.status),
     );
 
     app.post(
       '/:userId/review',
       {
+        onRequest,
         schema: {
           params: z.object({ userId: IdParam }),
           body: z.object({ approve: z.boolean(), level: z.number().int().optional() }),

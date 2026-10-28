@@ -16,13 +16,13 @@ import {
 export const adminSettlementRoutes =
   (deps: Deps): FastifyPluginAsyncZod =>
   async (app) => {
-    app.addHook('preHandler', adminGuard(deps));
+    const onRequest = adminGuard(deps, 'finance');
 
-    app.get('/settings/commission-bps', async () => ({ bps: await getCommissionBps(deps.db) }));
+    app.get('/settings/commission-bps', { onRequest }, async () => ({ bps: await getCommissionBps(deps.db) }));
 
     app.put(
       '/settings/commission-bps',
-      { schema: { body: z.object({ bps: z.number().int().min(0).max(9999) }) } },
+      { onRequest: adminGuard(deps, 'super'), schema: { body: z.object({ bps: z.number().int().min(0).max(9999) }) } },
       async (req) =>
         deps.db.transaction(async (tx) => {
           await setCommissionBps(tx, req.body.bps);
@@ -38,7 +38,7 @@ export const adminSettlementRoutes =
 
     app.post(
       '/settlements/generate',
-      { schema: { body: z.object({ periodStart: DateStr, periodEnd: DateStr }) } },
+      { onRequest, schema: { body: z.object({ periodStart: DateStr, periodEnd: DateStr }) } },
       async (req, reply) => {
         const rows = await deps.db.transaction(async (tx) => {
           const created = await generateSettlements(tx, req.body);
@@ -56,13 +56,14 @@ export const adminSettlementRoutes =
 
     app.get(
       '/settlements',
-      { schema: { querystring: z.object({ status: z.enum(settlementStatus.enumValues).optional() }) } },
+      { onRequest, schema: { querystring: z.object({ status: z.enum(settlementStatus.enumValues).optional() }) } },
       async (req) => listSettlements(deps.db, req.query.status),
     );
 
     app.post(
       '/settlements/:id/pay',
       {
+        onRequest,
         schema: {
           params: z.object({ id: IdParam }),
           body: z.object({ proof: z.string().trim().min(1).max(200) }),

@@ -56,7 +56,7 @@ export const adminAuthRoutes =
       return { ok: true };
     });
 
-    app.get('/me', { preHandler: adminGuard(deps) }, async (req) => {
+    app.get('/me', { onRequest: adminGuard(deps) }, async (req) => {
       const [a] = await deps.db
         .select({ id: admins.id, username: admins.username, role: admins.role })
         .from(admins)
@@ -67,7 +67,7 @@ export const adminAuthRoutes =
     app.get(
       '/audit-logs',
       {
-        preHandler: adminGuard(deps),
+        onRequest: adminGuard(deps, 'super'),
         schema: { querystring: z.object({ limit: z.coerce.number().int().min(1).max(500).default(100) }) },
       },
       async (req) =>

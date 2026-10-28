@@ -28,41 +28,47 @@ const CSV_HEADER = ['订单号', '用户ID', '用户昵称', '老师ID', '老师
 export const adminOrderRoutes =
   (deps: Deps): FastifyPluginAsyncZod =>
   async (app) => {
-    app.addHook('preHandler', adminGuard(deps));
+    const anyAdmin = adminGuard(deps);
 
-    app.get('/orders', { schema: { querystring: OrderQuerySchema.extend(PageSchema.shape) } }, async (req) =>
-      queryOrders(deps.db, req.query),
+    app.get(
+      '/orders',
+      { onRequest: anyAdmin, schema: { querystring: OrderQuerySchema.extend(PageSchema.shape) } },
+      async (req) => queryOrders(deps.db, req.query),
     );
 
-    app.get('/orders/summary', { schema: { querystring: OrderQuerySchema } }, async (req) =>
+    app.get('/orders/summary', { onRequest: anyAdmin, schema: { querystring: OrderQuerySchema } }, async (req) =>
       orderSummary(deps.db, req.query),
     );
 
-    app.get('/orders.csv', { schema: { querystring: OrderQuerySchema } }, async (req, reply) => {
-      const rows = await queryOrders(deps.db, req.query);
-      await audit(deps.db, {
-        adminId: req.adminId,
-        action: 'orders.export',
-        target: 'orders',
-        detail: { ...req.query, count: rows.length },
-      });
-      const csv = toCsv(
-        CSV_HEADER,
-        rows.map((o) => [
-          o.outTradeNo,
-          o.userId,
-          o.userNickname,
-          o.teacherId,
-          o.teacherName,
-          o.packageTitle,
-          centsToYuan(o.amountCents),
-          o.status,
-          o.paidAt ? formatDateTimeCN(o.paidAt) : '',
-        ]),
-      );
-      return reply
-        .type('text/csv; charset=utf-8')
-        .header('content-disposition', 'attachment; filename="orders.csv"')
-        .send(csv);
-    });
+    app.get(
+      '/orders.csv',
+      { onRequest: adminGuard(deps, 'finance'), schema: { querystring: OrderQuerySchema } },
+      async (req, reply) => {
+        const rows = await queryOrders(deps.db, req.query);
+        await audit(deps.db, {
+          adminId: req.adminId,
+          action: 'orders.export',
+          target: 'orders',
+          detail: { ...req.query, count: rows.length },
+        });
+        const csv = toCsv(
+          CSV_HEADER,
+          rows.map((o) => [
+            o.outTradeNo,
+            o.userId,
+            o.userNickname,
+            o.teacherId,
+            o.teacherName,
+            o.packageTitle,
+            centsToYuan(o.amountCents),
+            o.status,
+            o.paidAt ? formatDateTimeCN(o.paidAt) : '',
+          ]),
+        );
+        return reply
+          .type('text/csv; charset=utf-8')
+          .header('content-disposition', 'attachment; filename="orders.csv"')
+          .send(csv);
+      },
+    );
   };

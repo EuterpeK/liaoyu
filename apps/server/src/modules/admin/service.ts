@@ -53,7 +53,9 @@ export async function resolveSession(
     .select({ adminId: adminSessions.adminId, role: admins.role })
     .from(adminSessions)
     .innerJoin(admins, eq(admins.id, adminSessions.adminId))
-    .where(and(eq(adminSessions.tokenHash, sha256(token)), gt(adminSessions.expiresAt, now), isNull(admins.disabledAt)));
+    .where(
+      and(eq(adminSessions.tokenHash, sha256(token)), gt(adminSessions.expiresAt, now), isNull(admins.disabledAt)),
+    );
   return s ?? null;
 }
 
