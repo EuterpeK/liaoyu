@@ -4,7 +4,8 @@ import { accruals, type packages, serviceRelations } from '../../db/schema.ts';
 import { addMs, HOUR_MS, MINUTE_MS } from '../../lib/dates.ts';
 import { setSchedule } from '../schedule/service.ts';
 import { generateSettlements } from '../settlement/service.ts';
-import { autoConfirm, book, getAppointment, onRoomDismissed, recordEnter } from './service.ts';
+import { autoConfirm, onRoomDismissed, recordEnter } from './calls.ts';
+import { book, getAppointment } from './service.ts';
 
 const SINGLE = { type: 'single', title: '单次咨询', days: 0, callQuota: 1, priceCents: 500 } as const;
 

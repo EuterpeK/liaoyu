@@ -22,6 +22,11 @@ const OutTradeNoQuery = z.object({ out_trade_no: z.string().min(1).max(64) });
 export const payRoutes =
   (deps: Deps): FastifyPluginAsyncZod =>
   async (app) => {
+    /** 模拟收银台仅限非生产且未配置真实支付；双重保险，防止误配后被免费置为已支付 */
+    function assertMockAllowed(): void {
+      if (!deps.payment.isMock || deps.config.nodeEnv === 'production') throw new HttpError(404, 'Not Found');
+    }
+
     async function handleNotify(params: unknown, log: FastifyBaseLogger): Promise<'success' | 'fail'> {
       const r = deps.payment.parseNotify((params ?? {}) as Record<string, unknown>);
       if (r.kind === 'invalid') {
@@ -49,7 +54,7 @@ export const payRoutes =
     );
 
     app.get('/mock', { schema: { querystring: OutTradeNoQuery, hide: true } }, async (req, reply) => {
-      if (!deps.payment.isMock) throw new HttpError(404, 'Not Found');
+      assertMockAllowed();
       const o = await getOrderByOutTradeNo(deps.db, req.query.out_trade_no);
       if (!o) throw new HttpError(404, '订单不存在');
       const action = `/api/pay/mock/confirm?out_trade_no=${encodeURIComponent(o.outTradeNo)}`;
@@ -60,7 +65,7 @@ export const payRoutes =
     });
 
     app.post('/mock/confirm', { schema: { querystring: OutTradeNoQuery, hide: true } }, async (req, reply) => {
-      if (!deps.payment.isMock) throw new HttpError(404, 'Not Found');
+      assertMockAllowed();
       const o = await getOrderByOutTradeNo(deps.db, req.query.out_trade_no);
       if (!o) throw new HttpError(404, '订单不存在');
       await fulfillOrder(deps.db, deps.clock, o.outTradeNo, {

@@ -14,6 +14,10 @@ import type { Deps } from './deps.ts';
 import { HttpError } from './lib/errors.ts';
 import { type App, registerRoutes } from './routes.ts';
 
+/** 管理台是自包含的单文件页面（内联脚本/样式），只允许同源请求 */
+const ADMIN_CSP =
+  "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'";
+
 declare module 'fastify' {
   interface FastifyRequest {
     userId: number;
@@ -42,6 +46,14 @@ export async function buildApp(deps: Deps): Promise<App> {
     return reply.status(500).send({ error: '服务器错误' });
   });
 
+  app.addHook('onSend', async (_req, reply) => {
+    reply.header('x-content-type-options', 'nosniff');
+    reply.header('x-frame-options', 'DENY');
+    reply.header('referrer-policy', 'no-referrer');
+    reply.header('cross-origin-resource-policy', 'same-origin');
+    if (deps.config.cookieSecure) reply.header('strict-transport-security', 'max-age=31536000; includeSubDomains');
+  });
+
   await app.register(cookie);
   await app.register(formbody);
   await app.register(swagger, {
@@ -59,6 +71,7 @@ export async function buildApp(deps: Deps): Promise<App> {
     return reply
       .type('text/html; charset=utf-8')
       .header('cache-control', 'no-store')
+      .header('content-security-policy', ADMIN_CSP)
       .send(html);
   });
 

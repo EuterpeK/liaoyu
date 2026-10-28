@@ -4,16 +4,8 @@ import type { Deps } from '../../deps.ts';
 import { DateStr, IdParam } from '../../lib/zod.ts';
 import { userGuard } from '../auth/guards.ts';
 import { teacherGuard } from '../teachers/guard.ts';
-import {
-  createLeave,
-  decideChoice,
-  listChoices,
-  listInvites,
-  listLeaves,
-  MAX_CANDIDATES,
-  respondInvite,
-  revokeSubstitute,
-} from './service.ts';
+import { decideChoice, listChoices, revokeSubstitute } from './choices.ts';
+import { createLeave, listInvites, listLeaves, MAX_CANDIDATES, respondInvite } from './service.ts';
 
 const LeaveBody = z.object({
   startDate: DateStr,

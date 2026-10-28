@@ -7,7 +7,8 @@ import { accrueUpTo } from '../accrual/service.ts';
 import { book, getAppointment } from '../appointments/service.ts';
 import { loadSegments } from '../relations/service.ts';
 import { setSchedule } from '../schedule/service.ts';
-import { createLeave, expireChoices, respondInvite } from './service.ts';
+import { expireChoices } from './choices.ts';
+import { createLeave, respondInvite } from './service.ts';
 
 async function world(range = { startDate: '2026-11-10', endDate: '2026-11-14' }) {
   const ctx = await setup();

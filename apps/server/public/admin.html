@@ -255,7 +255,7 @@ async function enter(username) {
   $('#login').hidden = true;
   $('#app').hidden = false;
   $('#whoami').textContent = username;
-  $('#tabs').innerHTML = TABS.map((t) => `<div class="tab" data-id="${t.id}">${t.label}</div>`).join('');
+  $('#tabs').innerHTML = TABS.map((t) => `<div class="tab" data-id="${esc(t.id)}">${esc(t.label)}</div>`).join('');
   document.querySelectorAll('.tab').forEach((el) => (el.onclick = () => switchTab(el.dataset.id)));
   switchTab('overview');
 }
@@ -273,19 +273,16 @@ async function switchTab(id) {
 
 /* ---------------- 概览 ---------------- */
 async function renderOverview(el) {
-  const [teachers, orders] = await Promise.all([api('/teachers'), api('/orders')]);
-  const revenue = orders.filter((o) => o.status === 'paid').reduce((s, o) => s + o.amountCents, 0);
-  const students = new Set(orders.map((o) => o.userId)).size;
+  const [teachers, sum, recent] = await Promise.all([api('/teachers'), api('/orders/summary'), api('/orders?limit=8')]);
   const cards = [
     { k: '入驻老师', v: teachers.filter((t) => t.status === 'active').length, s: `待审 ${teachers.filter((t) => t.status === 'pending').length}` },
-    { k: '购买学员', v: students, s: '按订单去重' },
-    { k: '订单数', v: orders.length, s: `已支付 ${orders.filter((o) => o.status === 'paid').length}` },
-    { k: '累计收入', v: yuan(revenue), s: '已支付订单合计', money: true },
+    { k: '购买学员', v: sum.buyerCount, s: '按订单去重' },
+    { k: '订单数', v: sum.orderCount, s: `已支付 ${sum.paidCount}` },
+    { k: '累计收入', v: yuan(sum.revenueCents), s: '已支付订单合计', money: true },
   ];
-  const recent = orders.slice(0, 8);
   el.innerHTML = `
     <div class="stats">${cards.map((c) => `
-      <div class="stat glass"><div class="k">${c.k}</div><div class="v" ${c.money ? 'style="color:#b9752e"' : ''}>${esc(c.v)}</div><div class="k">${esc(c.s)}</div></div>`).join('')}
+      <div class="stat glass"><div class="k">${esc(c.k)}</div><div class="v" ${c.money ? 'style="color:#b9752e"' : ''}>${esc(c.v)}</div><div class="k">${esc(c.s)}</div></div>`).join('')}
     </div>
     <div class="panel glass">
       <h2>最近订单</h2><div class="desc">按创建时间倒序，最多 8 条</div>
@@ -352,19 +349,30 @@ async function renderOrders(el) {
           <option value="">全部状态</option>
           <option value="pending">待支付</option>
           <option value="paid">已支付</option>
-          <option value="cancelled">已取消</option>
-          <option value="refunded">已退款</option>
         </select>
         <button class="ghost" id="order-refresh">刷新</button>
         <a class="btn ghost" href="/api/admin/orders.csv" style="text-decoration:none">导出 CSV</a>
       </div>
       <div id="order-body"></div>
     </div>`;
-  const load = async () => {
-    const status = $('#order-status').value;
-    const rows = await api('/orders' + (status ? `?status=${status}` : ''));
-    $('#order-body').innerHTML = rows.length ? orderTable(rows) : '<div class="empty">暂无订单</div>';
+  const PAGE = 100;
+  let rows = [];
+  const draw = (more) => {
+    $('#order-body').innerHTML = rows.length
+      ? orderTable(rows) + (more ? '<div style="text-align:center;margin-top:12px"><button class="ghost" id="order-more">加载更多</button></div>' : '')
+      : '<div class="empty">暂无订单</div>';
+    const btn = $('#order-more');
+    if (btn) btn.onclick = () => fetchPage(false);
   };
+  const fetchPage = async (reset) => {
+    const status = $('#order-status').value;
+    const qs = new URLSearchParams({ limit: PAGE, offset: reset ? 0 : rows.length });
+    if (status) qs.set('status', status);
+    const page = await api('/orders?' + qs);
+    rows = reset ? page : rows.concat(page);
+    draw(page.length === PAGE);
+  };
+  const load = () => fetchPage(true);
   $('#order-refresh').onclick = load;
   $('#order-status').onchange = load;
   await load();

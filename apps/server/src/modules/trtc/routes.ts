@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { Deps } from '../../deps.ts';
 import { parseImId } from '../../providers/tencent.ts';
 import { verifyTrtcSign } from '../../providers/tencent-callback.ts';
-import { onRoomDismissed, recordEnter } from '../appointments/service.ts';
+import { onRoomDismissed, recordEnter } from '../appointments/calls.ts';
 
 const ROOM_EVENTS = 1;
 const DISMISS_ROOM = 102;

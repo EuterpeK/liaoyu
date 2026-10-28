@@ -29,6 +29,13 @@
       "when": 1792925185332,
       "tag": "0003_constraints2",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793022225084,
+      "tag": "0004_indexes",
+      "breakpoints": true
     }
   ]
 }

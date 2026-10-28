@@ -11,7 +11,7 @@ import {
   users,
 } from '../src/db/schema.ts';
 import { createDeps } from '../src/deps.ts';
-import { type Clock, fixedClock } from '../src/lib/clock.ts';
+import type { Clock } from '../src/lib/clock.ts';
 import { encryptField } from '../src/lib/crypto.ts';
 import { ADMIN_COOKIE, upsertAdmin } from '../src/modules/admin/service.ts';
 import { createOrder, fulfillOrder } from '../src/modules/orders/service.ts';

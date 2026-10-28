@@ -93,7 +93,10 @@ export const teacherProfiles = pgTable(
     createdAt: createdAt(),
     reviewedAt: tstz('reviewed_at'),
   },
-  (t) => [check('teacher_level_range', sql`${t.level} BETWEEN 0 AND 5`)],
+  (t) => [
+    check('teacher_level_range', sql`${t.level} BETWEEN 0 AND 5`),
+    index('teacher_profiles_status_idx').on(t.status),
+  ],
 );
 
 export const packages = pgTable(
@@ -137,7 +140,11 @@ export const orders = pgTable(
     paidAt: tstz('paid_at'),
     createdAt: createdAt(),
   },
-  (t) => [index('orders_user_idx').on(t.userId), index('orders_teacher_idx').on(t.teacherId)],
+  (t) => [
+    index('orders_user_idx').on(t.userId),
+    index('orders_teacher_idx').on(t.teacherId),
+    index('orders_created_idx').on(t.createdAt),
+  ],
 );
 
 export const serviceRelations = pgTable(
@@ -168,6 +175,8 @@ export const serviceRelations = pgTable(
   (t) => [
     index('relations_user_teacher_idx').on(t.userId, t.teacherId),
     index('relations_teacher_idx').on(t.teacherId),
+    // 每日任务：扫描已到期的在服关系
+    index('relations_active_end_idx').on(t.endDate).where(sql`status = 'active'`),
     check('relation_dates', sql`${t.endDate} >= ${t.startDate}`),
   ],
 );
@@ -231,6 +240,9 @@ export const accruals = pgTable(
   (t) => [
     unique('accruals_relation_date_uq').on(t.relationId, t.date),
     index('accruals_teacher_date_idx').on(t.teacherId, t.date),
+    // 结算：只扫未结算的计提
+    index('accruals_unsettled_idx').on(t.date).where(sql`settlement_id IS NULL`),
+    index('accruals_relation_idx').on(t.relationId),
   ],
 );
 
@@ -287,6 +299,7 @@ export const schedules = pgTable(
     endMin: integer('end_min').notNull(),
   },
   (t) => [
+    index('schedules_teacher_idx').on(t.teacherId, t.weekday),
     check('schedule_weekday', sql`${t.weekday} BETWEEN 0 AND 6`),
     check('schedule_time', sql`${t.startMin} >= 0 AND ${t.endMin} <= 1440 AND ${t.startMin} < ${t.endMin}`),
   ],
@@ -319,45 +332,71 @@ export const appointments = pgTable(
   (t) => [
     index('appointments_user_idx').on(t.userId, t.startAt),
     index('appointments_teacher_idx').on(t.teacherId, t.startAt),
+    index('appointments_relation_idx').on(t.relationId),
+    // 分钟级任务：缺席判定 / 自动完成只扫待进行的预约
+    index('appointments_booked_start_idx').on(t.startAt).where(sql`status = 'booked'`),
+    index('appointments_booked_end_idx').on(t.endAt).where(sql`status = 'booked'`),
+    // 分钟级任务：自动确认只扫待确认的单次通话
+    index('appointments_confirm_pending_idx').on(t.endedAt).where(sql`confirm_status = 'pending'`),
   ],
 );
 
-export const leaves = pgTable('leaves', {
-  id: id(),
-  teacherId: integer('teacher_id')
-    .notNull()
-    .references(() => users.id),
-  startDate: day('start_date').notNull(),
-  endDate: day('end_date').notNull(),
-  reason: text('reason').notNull().default(''),
-  createdAt: createdAt(),
-});
+export const leaves = pgTable(
+  'leaves',
+  {
+    id: id(),
+    teacherId: integer('teacher_id')
+      .notNull()
+      .references(() => users.id),
+    startDate: day('start_date').notNull(),
+    endDate: day('end_date').notNull(),
+    reason: text('reason').notNull().default(''),
+    createdAt: createdAt(),
+  },
+  (t) => [index('leaves_teacher_idx').on(t.teacherId, t.startDate, t.endDate)],
+);
 
-export const substituteCandidates = pgTable('substitute_candidates', {
-  id: id(),
-  leaveId: integer('leave_id')
-    .notNull()
-    .references(() => leaves.id, { onDelete: 'cascade' }),
-  teacherId: integer('teacher_id')
-    .notNull()
-    .references(() => users.id),
-  status: text('status').$type<'invited' | 'accepted' | 'rejected' | 'revoked'>().notNull().default('invited'),
-  respondedAt: tstz('responded_at'),
-});
+export const substituteCandidates = pgTable(
+  'substitute_candidates',
+  {
+    id: id(),
+    leaveId: integer('leave_id')
+      .notNull()
+      .references(() => leaves.id, { onDelete: 'cascade' }),
+    teacherId: integer('teacher_id')
+      .notNull()
+      .references(() => users.id),
+    status: text('status').$type<'invited' | 'accepted' | 'rejected' | 'revoked'>().notNull().default('invited'),
+    respondedAt: tstz('responded_at'),
+  },
+  (t) => [
+    index('substitute_candidates_leave_idx').on(t.leaveId),
+    index('substitute_candidates_teacher_idx').on(t.teacherId, t.status),
+  ],
+);
 
-export const leaveChoices = pgTable('leave_choices', {
-  id: id(),
-  leaveId: integer('leave_id')
-    .notNull()
-    .references(() => leaves.id, { onDelete: 'cascade' }),
-  relationId: integer('relation_id')
-    .notNull()
-    .references(() => serviceRelations.id),
-  status: text('status').$type<'pending' | 'wait' | 'substitute' | 'expired'>().notNull().default('pending'),
-  substituteTeacherId: integer('substitute_teacher_id').references(() => users.id),
-  decidedAt: tstz('decided_at'),
-  deadlineAt: tstz('deadline_at').notNull(),
-});
+export const leaveChoices = pgTable(
+  'leave_choices',
+  {
+    id: id(),
+    leaveId: integer('leave_id')
+      .notNull()
+      .references(() => leaves.id, { onDelete: 'cascade' }),
+    relationId: integer('relation_id')
+      .notNull()
+      .references(() => serviceRelations.id),
+    status: text('status').$type<'pending' | 'wait' | 'substitute' | 'expired'>().notNull().default('pending'),
+    substituteTeacherId: integer('substitute_teacher_id').references(() => users.id),
+    decidedAt: tstz('decided_at'),
+    deadlineAt: tstz('deadline_at').notNull(),
+  },
+  (t) => [
+    index('leave_choices_leave_idx').on(t.leaveId),
+    index('leave_choices_relation_idx').on(t.relationId),
+    // 分钟级任务：只扫待选择且到期的
+    index('leave_choices_pending_deadline_idx').on(t.deadlineAt).where(sql`status = 'pending'`),
+  ],
+);
 
 export const crisisEvents = pgTable('crisis_events', {
   id: id(),

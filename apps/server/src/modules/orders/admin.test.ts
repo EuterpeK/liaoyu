@@ -58,6 +58,26 @@ describe('管理端订单查询与导出', () => {
     ).toBe(400);
   });
 
+  test('分页：limit/offset 按 id 倒序切片；limit 超上限返回 400', async () => {
+    const w = await world();
+    const all = await w.list();
+    const first = await w.list({ limit: 1 });
+    const second = await w.list({ limit: 1, offset: 1 });
+    expect(first.map((o: { outTradeNo: string }) => o.outTradeNo)).toEqual([all[0].outTradeNo]);
+    expect(second.map((o: { outTradeNo: string }) => o.outTradeNo)).toEqual([all[1].outTradeNo]);
+    expect(await w.list({ limit: 1, offset: 2 })).toHaveLength(0);
+    expect(
+      (await call(w.ctx, 'GET', '/api/admin/orders', { cookie: w.cookie, query: { limit: 501 } })).statusCode,
+    ).toBe(400);
+  });
+
+  test('汇总：订单数/已支付数/收入/购买人数，不受分页影响', async () => {
+    const w = await world();
+    const res = await call(w.ctx, 'GET', '/api/admin/orders/summary', { cookie: w.cookie });
+    expect(res.json()).toEqual({ orderCount: 2, paidCount: 1, revenueCents: 3000, buyerCount: 1 });
+    expect((await call(w.ctx, 'GET', '/api/admin/orders/summary')).statusCode).toBe(401);
+  });
+
   test('CSV 导出：BOM + 表头 + 北京时间 + 写审计', async () => {
     const w = await world();
     const res = await call(w.ctx, 'GET', '/api/admin/orders.csv', { cookie: w.cookie, query: { status: 'paid' } });

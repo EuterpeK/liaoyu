@@ -47,16 +47,34 @@ export interface JobBoss {
   schedule(name: string, cron: string, data: object, options: { tz: string }): Promise<void>;
 }
 
+/** 连续失败达到该次数时，日志升级为带 alert 标记的告警，便于日志告警规则匹配 */
+export const ALERT_AFTER_FAILURES = 3;
+
 export async function registerJobs(boss: JobBoss, ctx: JobContext, jobs: readonly JobDef[] = JOBS): Promise<void> {
+  const failures = new Map<string, number>();
   for (const job of jobs) {
     if (!(await boss.getQueue(job.name))) await boss.createQueue(job.name);
     await boss.work(job.name, async () => {
+      const startedAt = performance.now();
+      const durationMs = () => Math.round(performance.now() - startedAt);
       try {
         const result = await job.run(ctx);
-        ctx.log.info({ job: job.name, result }, '定时任务完成');
+        failures.set(job.name, 0);
+        ctx.log.info({ job: job.name, result, durationMs: durationMs() }, '定时任务完成');
         return result;
       } catch (err) {
-        ctx.log.error({ job: job.name, err }, '定时任务失败');
+        const consecutive = (failures.get(job.name) ?? 0) + 1;
+        failures.set(job.name, consecutive);
+        ctx.log.error(
+          {
+            job: job.name,
+            err,
+            durationMs: durationMs(),
+            consecutiveFailures: consecutive,
+            alert: consecutive >= ALERT_AFTER_FAILURES,
+          },
+          consecutive >= ALERT_AFTER_FAILURES ? '定时任务连续失败' : '定时任务失败',
+        );
         throw err;
       }
     });

@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { buyAndPay, insertPackage, insertTeacher, insertUser, setup } from '../../tests/helpers.ts';
 import { fixedClock } from '../lib/clock.ts';
-import { JOBS, type JobBoss, type JobContext, registerJobs, TZ } from './index.ts';
+import { ALERT_AFTER_FAILURES, JOBS, type JobBoss, type JobContext, registerJobs, TZ } from './index.ts';
 
 type Handler = (jobs: unknown[]) => Promise<unknown>;
 
@@ -79,5 +79,34 @@ describe('定时任务', () => {
     await registerJobs(f.boss, { db: ctx.db, clock: ctx.clock, log }, [boom]);
     await expect(f.handlers.get('boom')?.([])).rejects.toThrow('炸了');
     expect(log.error).toHaveBeenCalled();
+  });
+
+  test('成功日志带耗时；连续失败达到阈值升级为告警，成功后清零', async () => {
+    const ctx = await setup();
+    const f = fakeBoss();
+    const log = fakeLog();
+    let fail = true;
+    const flaky = {
+      name: 'flaky',
+      cron: '* * * * *',
+      run: async () => {
+        if (fail) throw new Error('炸了');
+        return { ok: true };
+      },
+    };
+    await registerJobs(f.boss, { db: ctx.db, clock: ctx.clock, log }, [flaky]);
+    const run = () => f.handlers.get('flaky')?.([]);
+
+    for (let i = 1; i <= ALERT_AFTER_FAILURES; i++) await run()?.catch(() => {});
+    const calls = log.error.mock.calls.map((c) => c[0]);
+    expect(calls.map((c) => c.consecutiveFailures)).toEqual([1, 2, 3]);
+    expect(calls.map((c) => c.alert)).toEqual([false, false, true]);
+
+    fail = false;
+    await run();
+    expect(log.info.mock.calls.at(-1)?.[0]).toMatchObject({ job: 'flaky', durationMs: expect.any(Number) });
+    fail = true;
+    await run()?.catch(() => {});
+    expect(log.error.mock.calls.at(-1)?.[0].consecutiveFailures).toBe(1);
   });
 });

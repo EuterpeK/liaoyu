@@ -8,7 +8,7 @@ import { formatDateTimeCN } from '../../lib/dates.ts';
 import { centsToYuan } from '../../lib/money.ts';
 import { DateStr, IdParam } from '../../lib/zod.ts';
 import { adminGuard } from '../admin/guard.ts';
-import { queryOrders } from './service.ts';
+import { orderSummary, queryOrders } from './service.ts';
 
 const OrderQuerySchema = z.object({
   userId: IdParam.optional(),
@@ -18,6 +18,11 @@ const OrderQuerySchema = z.object({
   to: DateStr.optional(),
 });
 
+const PageSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(500).default(100),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
 const CSV_HEADER = ['订单号', '用户ID', '用户昵称', '老师ID', '老师', '套餐', '金额(元)', '状态', '支付时间'];
 
 export const adminOrderRoutes =
@@ -25,7 +30,13 @@ export const adminOrderRoutes =
   async (app) => {
     app.addHook('preHandler', adminGuard(deps));
 
-    app.get('/orders', { schema: { querystring: OrderQuerySchema } }, async (req) => queryOrders(deps.db, req.query));
+    app.get('/orders', { schema: { querystring: OrderQuerySchema.extend(PageSchema.shape) } }, async (req) =>
+      queryOrders(deps.db, req.query),
+    );
+
+    app.get('/orders/summary', { schema: { querystring: OrderQuerySchema } }, async (req) =>
+      orderSummary(deps.db, req.query),
+    );
 
     app.get('/orders.csv', { schema: { querystring: OrderQuerySchema } }, async (req, reply) => {
       const rows = await queryOrders(deps.db, req.query);

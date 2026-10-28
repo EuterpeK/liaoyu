@@ -4,16 +4,8 @@ import type { Deps } from '../../deps.ts';
 import { DateStr, HhMm, IdParam } from '../../lib/zod.ts';
 import { userGuard } from '../auth/guards.ts';
 import { teacherGuard } from '../teachers/guard.ts';
-import {
-  book,
-  cancelByTeacher,
-  cancelByUser,
-  confirmCall,
-  joinCall,
-  listForTeacher,
-  listForUser,
-  slotsForRelation,
-} from './service.ts';
+import { confirmCall, joinCall } from './calls.ts';
+import { book, cancelByTeacher, cancelByUser, listForTeacher, listForUser, slotsForRelation } from './service.ts';
 
 const ById = { params: z.object({ id: IdParam }) };
 

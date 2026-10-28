@@ -1,6 +1,6 @@
 import type { DbOrTx } from '../db/client.ts';
-import { autoComplete, autoConfirm, markNoShows } from '../modules/appointments/service.ts';
-import { expireChoices } from '../modules/leaves/service.ts';
+import { autoComplete, autoConfirm, markNoShows } from '../modules/appointments/calls.ts';
+import { expireChoices } from '../modules/leaves/choices.ts';
 
 export interface FrequentResult {
   expiredChoices: number;

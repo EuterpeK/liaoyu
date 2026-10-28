@@ -15,7 +15,8 @@ import type { Config } from '../../config.ts';
 import { serviceRelations } from '../../db/schema.ts';
 import { addMs, MINUTE_MS } from '../../lib/dates.ts';
 import { setSchedule } from '../schedule/service.ts';
-import { autoComplete, book, getAppointment, markNoShows, onRoomDismissed, recordEnter } from './service.ts';
+import { autoComplete, markNoShows, onRoomDismissed, recordEnter } from './calls.ts';
+import { book, getAppointment } from './service.ts';
 
 const REAL = { tencent: { ...TENCENT, trtcCallbackKey: 'ck' } };
 
