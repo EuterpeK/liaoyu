@@ -18,4 +18,5 @@ export const MATRIX: Record<string, MatrixRow> = {
   'settlement.generate': { method: 'POST', url: '/api/admin/settlements/generate', roles: ['super', 'finance'] },
   'settlement.pay': { method: 'POST', url: '/api/admin/settlements/1/pay', roles: ['super', 'finance'] },
   'audit.view': { method: 'GET', url: '/api/admin/audit-logs', roles: ['super'] },
+  'admins.manage': { method: 'GET', url: '/api/admin/admins', roles: ['super'] },
 };

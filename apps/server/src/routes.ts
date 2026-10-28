@@ -7,6 +7,7 @@ import type {
 } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { Deps } from './deps.ts';
+import { adminAccountRoutes } from './modules/admin/accounts-routes.ts';
 import { adminAuthRoutes } from './modules/admin/routes.ts';
 import { appointmentRoutes, teacherAppointmentRoutes } from './modules/appointments/routes.ts';
 import { authRoutes } from './modules/auth/routes.ts';
@@ -37,6 +38,7 @@ export type App = FastifyInstance<
 export async function registerRoutes(app: App, deps: Deps): Promise<void> {
   await app.register(authRoutes(deps), { prefix: '/api/auth' });
   await app.register(adminAuthRoutes(deps), { prefix: '/api/admin' });
+  await app.register(adminAccountRoutes(deps), { prefix: '/api/admin/admins' });
   await app.register(teacherRoutes(deps), { prefix: '/api/teacher' });
   await app.register(teacherScheduleRoutes(deps), { prefix: '/api/teacher/schedule' });
   await app.register(appointmentRoutes(deps), { prefix: '/api/appointments' });
