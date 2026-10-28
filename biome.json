@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.6.3/schema.json",
   "files": {
-    "includes": ["**", "!**/node_modules", "!**/migrations", "!docs", "!**/public"]
+    "includes": ["**", "!**/node_modules", "!**/migrations", "!**/dist", "!docs", "!**/public"]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
   "javascript": { "formatter": { "quoteStyle": "single" } },
