@@ -1,14 +1,24 @@
 <view class="wrap">
-  <view class="logo">LiaoYu</view>
-  <view class="slogan">把心事，说给懂的人听</view>
+  <view class="brand">
+    <view class="mark">聊</view>
+    <view class="logo">LiaoYu</view>
+    <view class="slogan">把心事，说给懂的人听</view>
+  </view>
+
+  <view class="points">
+    <view class="point"><text class="p-ico">1</text><text>认证老师一对一，随时留言</text></view>
+    <view class="point"><text class="p-ico">2</text><text>自助预约通话，时间由你定</text></view>
+    <view class="point"><text class="p-ico">3</text><text>老师请假可等待或换人，服务不中断</text></view>
+  </view>
 
   <button class="btn login-btn" disabled="{{!!loading}}" bindtap="onTapLogin">
     {{loading === 'wx' ? '登录中…' : '微信一键登录'}}
   </button>
+  <view class="tips">登录即表示同意用户协议与隐私政策</view>
 
-  <view class="dev glass">
+  <view class="dev glass" wx:if="{{isDev}}">
     <view class="dev-title">开发测试账号</view>
-    <view class="dev-hint">需先运行 pnpm -F @liaoyu/server seed</view>
+    <view class="muted dev-hint">需先运行 pnpm -F @liaoyu/server seed</view>
     <view class="group" wx:for="{{[0, 1]}}" wx:key="*this">
       <view class="group-label">{{item === 0 ? '学员' : '老师'}}</view>
       <view class="accs">

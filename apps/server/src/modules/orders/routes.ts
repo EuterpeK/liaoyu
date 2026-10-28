@@ -4,7 +4,7 @@ import type { Deps } from '../../deps.ts';
 import { HttpError } from '../../lib/errors.ts';
 import { IdParam } from '../../lib/zod.ts';
 import { userGuard } from '../auth/guards.ts';
-import { createOrder, getOrderByOutTradeNo } from './service.ts';
+import { createOrder, getOrderByOutTradeNo, listUserOrders } from './service.ts';
 
 export const orderRoutes =
   (deps: Deps): FastifyPluginAsyncZod =>
@@ -26,6 +26,8 @@ export const orderRoutes =
         .status(201)
         .send({ outTradeNo: order.outTradeNo, amountCents: order.amountCents, payUrl, mock: deps.payment.isMock });
     });
+
+    app.get('/', async (req) => listUserOrders(deps.db, req.userId));
 
     app.get(
       '/:outTradeNo',

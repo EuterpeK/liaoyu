@@ -1,0 +1,24 @@
+.picker {
+  font-size: 30rpx;
+  height: 56rpx;
+  line-height: 56rpx;
+}
+.picker.ph {
+  color: #b5c9be;
+}
+.cand {
+  display: flex;
+  align-items: center;
+  padding: 18rpx 0 6rpx;
+  margin-top: 12rpx;
+  border-top: 1rpx solid var(--line);
+}
+.summary {
+  margin-top: 12rpx;
+}
+.cancel {
+  text-align: center;
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: var(--sub);
+}

@@ -2,10 +2,15 @@ const { baseURL } = require('../../../config/env.js');
 const api = require('../../../utils/request.js');
 
 Page({
-  data: { title: '', yuan: '', packageId: 0, paying: false, paid: false },
+  data: { title: '', yuan: '', desc: '', packageId: 0, paying: false, paid: false },
 
-  onLoad({ packageId, title, yuan }) {
-    this.setData({ packageId: Number(packageId), title: decodeURIComponent(title), yuan });
+  onLoad({ packageId, title, yuan, desc }) {
+    this.setData({
+      packageId: Number(packageId),
+      title: decodeURIComponent(title),
+      desc: desc ? decodeURIComponent(desc) : '',
+      yuan,
+    });
   },
 
   async onTapPay() {

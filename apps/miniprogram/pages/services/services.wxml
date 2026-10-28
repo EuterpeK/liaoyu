@@ -1,56 +1,106 @@
-<view wx:if="{{loading}}">
-  <view class="empty">正在为你准备…</view>
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
 </view>
 
-<!-- 学员 -->
-<block wx:elif="{{role === 'student'}}">
-  <view class="hero">
-    <view class="hero-title">我的服务</view>
-    <view class="hero-sub">正在同行的老师与预约</view>
+<view wx:elif="{{loading}}">
+  <view class="glass" wx:for="{{[1, 2]}}" wx:key="*this">
+    <view class="sk sk-line short"></view>
+    <view class="sk sk-line"></view>
+    <view class="sk sk-line mid"></view>
   </view>
-  <view class="glass">
-    <view class="sec-title in-card">我的老师</view>
-    <view class="rel" wx:for="{{relations}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapBook">
-      <view class="avatar tone-{{index % 4}}">{{item.initial}}</view>
-      <view class="rel-body">
-        <view class="name">{{item.teacherName}}</view>
-        <view class="muted">服务期至 {{item.endDate}}</view>
-      </view>
-      <text class="link">去预约 ›</text>
-    </view>
-    <view class="empty" wx:if="{{!relations.length}}">购买套餐后，老师会出现在这里</view>
-  </view>
-  <view class="glass">
-    <view class="sec-title in-card">我的预约</view>
-    <view class="appt" wx:for="{{appointments}}" wx:key="id">
-      <view class="appt-body">
-        <view class="line">
-          <text class="name">{{item.teacherName}}</text>
-          <text class="cancel" wx:if="{{item.status === 'booked'}}" data-id="{{item.id}}" catchtap="onTapCancel">取消</text>
-          <text class="muted" wx:else>{{item.statusText}}</text>
-        </view>
-        <view class="muted">{{item.date}} · {{item.hm}}</view>
-      </view>
-    </view>
-    <view class="empty" wx:if="{{!appointments.length}}">还没有预约</view>
-  </view>
-</block>
+</view>
 
-<!-- 老师 -->
 <block wx:else>
   <view class="hero">
-    <view class="hero-title">预约列表</view>
-    <view class="hero-sub">来自学员的约定</view>
+    <view class="hero-title">{{role === 'teacher' ? '预约管理' : '我的服务'}}</view>
+    <view class="hero-sub">{{role === 'teacher' ? '学员与你的约定' : '正在同行的老师与预约'}}</view>
   </view>
-  <view class="glass appt" wx:for="{{appointments}}" wx:key="id">
-    <view class="avatar tone-{{index % 4}}">{{item.initial}}</view>
-    <view class="appt-body">
-      <view class="line">
-        <text class="name">{{item.userNickname || '学员'}}</text>
-        <text class="muted">{{item.statusText}}</text>
+
+  <!-- 学员：请假选择提醒 -->
+  <view class="banner" wx:if="{{role === 'student' && pendingChoices}}" bindtap="onTapChoices">
+    <view class="banner-body">
+      <view class="banner-title">老师请假了，{{pendingChoices}} 项待你选择</view>
+      <view class="banner-sub">选择等待或更换代班老师，逾期服务将暂停顺延</view>
+    </view>
+    <text class="cell-arrow">›</text>
+  </view>
+
+  <!-- 学员：服务关系 -->
+  <block wx:if="{{role === 'student'}}">
+    <view class="sec">
+      <text class="sec-title">我的老师</text>
+      <text class="sec-more" bindtap="onTapOrders">我的订单 ›</text>
+    </view>
+    <view class="glass rel" wx:for="{{relations}}" wx:key="id">
+      <view class="row" data-tid="{{item.teacherId}}" bindtap="onTapRelationTeacher">
+        <view class="avatar tone-{{item.tone}}">{{item.initial}}</view>
+        <view class="grow" style="margin-left: 24rpx">
+          <view class="line">
+            <text class="name">{{item.teacherName}}</text>
+            <text class="pill pill-{{item.statusTone}}">{{item.statusText}}</text>
+          </view>
+          <view class="muted">{{item.typeText}} · 服务期 {{item.startDate}} 至 {{item.endDate}}</view>
+        </view>
       </view>
-      <view class="muted">{{item.date}} · {{item.hm}}</view>
+      <block wx:if="{{item.active}}">
+        <view class="progress" wx:if="{{!item.single}}" style="margin-top: 24rpx">
+          <view class="progress-bar" style="width: {{item.percent}}%"></view>
+        </view>
+        <view class="line" style="margin-top: 16rpx">
+          <text class="muted">
+            <block wx:if="{{item.single}}">剩余通话 {{item.callsLeft}} 次</block>
+            <block wx:else>剩余 {{item.left}} 天 · 通话 {{item.callsLeft}} 次</block>
+          </text>
+          <button class="btn-sm primary" data-id="{{item.id}}" bindtap="onTapBook">去预约</button>
+        </view>
+      </block>
+    </view>
+    <view class="empty-card" wx:if="{{!relations.length}}">购买套餐后，老师会出现在这里</view>
+  </block>
+
+  <!-- 待确认的通话（单次套餐） -->
+  <block wx:if="{{toConfirm.length}}">
+    <view class="sec"><text class="sec-title">待确认的通话</text></view>
+    <view class="glass flush">
+      <view class="cell" wx:for="{{toConfirm}}" wx:key="id">
+        <view class="grow">
+          <view class="name">{{item.peerName}}</view>
+          <view class="muted">{{item.dayText}} · {{item.hm}}</view>
+        </view>
+        <button class="btn-sm danger" data-id="{{item.id}}" data-ok="{{false}}" disabled="{{busyId === item.id}}" bindtap="onTapConfirm">有异议</button>
+        <button class="btn-sm primary" data-id="{{item.id}}" data-ok="{{true}}" disabled="{{busyId === item.id}}" bindtap="onTapConfirm">确认完成</button>
+      </view>
+    </view>
+  </block>
+
+  <!-- 即将到来 -->
+  <view class="sec"><text class="sec-title">即将到来</text></view>
+  <view class="glass flush" wx:if="{{upcoming.length}}">
+    <view class="cell" wx:for="{{upcoming}}" wx:key="id">
+      <view class="grow">
+        <view class="name">{{item.peerName}}</view>
+        <view class="muted">{{item.dayText}} · {{item.hm}} - {{item.endHm}}</view>
+      </view>
+      <button class="btn-sm danger" data-id="{{item.id}}" disabled="{{busyId === item.id}}" bindtap="onTapCancel">取消</button>
     </view>
   </view>
-  <view class="empty" wx:if="{{!appointments.length}}">还没有预约</view>
+  <view class="empty-card" wx:else>{{role === 'teacher' ? '暂时没有待进行的预约' : '还没有预约，去和老师约个时间吧'}}</view>
+
+  <!-- 历史 -->
+  <block wx:if="{{history.length}}">
+    <view class="sec">
+      <text class="sec-title">历史预约</text>
+      <text class="muted" wx:if="{{historyMore}}">仅显示最近 {{history.length}} 条</text>
+    </view>
+    <view class="glass flush">
+      <view class="cell" wx:for="{{history}}" wx:key="id">
+        <view class="grow">
+          <view class="name">{{item.peerName}}</view>
+          <view class="muted">{{item.dayText}} · {{item.hm}}</view>
+        </view>
+        <text class="pill pill-{{item.tone}}">{{item.statusText}}</text>
+      </view>
+    </view>
+  </block>
 </block>

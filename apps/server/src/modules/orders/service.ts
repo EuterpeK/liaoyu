@@ -82,6 +82,27 @@ export async function fulfillOrder(
   });
 }
 
+/** 学员自己的订单（含老师名与套餐名），最近 100 条 */
+export async function listUserOrders(db: DbOrTx, userId: number) {
+  return db
+    .select({
+      outTradeNo: orders.outTradeNo,
+      teacherId: orders.teacherId,
+      teacherName: teacherProfiles.displayName,
+      packageTitle: sql<string>`${orders.packageSnapshot}->>'title'`,
+      packageType: sql<string>`${orders.packageSnapshot}->>'type'`,
+      amountCents: orders.amountCents,
+      status: orders.status,
+      paidAt: orders.paidAt,
+      createdAt: orders.createdAt,
+    })
+    .from(orders)
+    .innerJoin(teacherProfiles, eq(teacherProfiles.userId, orders.teacherId))
+    .where(eq(orders.userId, userId))
+    .orderBy(desc(orders.id))
+    .limit(100);
+}
+
 export interface OrderQuery {
   userId?: number;
   teacherId?: number;
@@ -90,10 +111,36 @@ export interface OrderQuery {
   from?: string;
   /** 北京时间日期，含 */
   to?: string;
+  /** 不传则返回全部（CSV 导出用）；列表接口必须传 */
+  limit?: number;
+  offset?: number;
+}
+
+function orderFilter(q: OrderQuery) {
+  return and(
+    q.userId ? eq(orders.userId, q.userId) : undefined,
+    q.teacherId ? eq(orders.teacherId, q.teacherId) : undefined,
+    q.status ? eq(orders.status, q.status) : undefined,
+    q.from ? gte(orders.createdAt, dayStartCN(q.from)) : undefined,
+    q.to ? lt(orders.createdAt, dayStartCN(addDays(q.to, 1))) : undefined,
+  );
+}
+
+export async function orderSummary(db: DbOrTx, q: OrderQuery = {}) {
+  const [r] = await db
+    .select({
+      orderCount: sql<number>`count(*)::int`,
+      paidCount: sql<number>`(count(*) FILTER (WHERE ${orders.status} = 'paid'))::int`,
+      revenueCents: sql<number>`coalesce(sum(${orders.amountCents}) FILTER (WHERE ${orders.status} = 'paid'), 0)::bigint`,
+      buyerCount: sql<number>`count(DISTINCT ${orders.userId})::int`,
+    })
+    .from(orders)
+    .where(orderFilter(q));
+  return { ...r, revenueCents: Number(r.revenueCents) };
 }
 
 export async function queryOrders(db: DbOrTx, q: OrderQuery) {
-  return db
+  const query = db
     .select({
       outTradeNo: orders.outTradeNo,
       userId: orders.userId,
@@ -110,14 +157,8 @@ export async function queryOrders(db: DbOrTx, q: OrderQuery) {
     .from(orders)
     .innerJoin(users, eq(users.id, orders.userId))
     .innerJoin(teacherProfiles, eq(teacherProfiles.userId, orders.teacherId))
-    .where(
-      and(
-        q.userId ? eq(orders.userId, q.userId) : undefined,
-        q.teacherId ? eq(orders.teacherId, q.teacherId) : undefined,
-        q.status ? eq(orders.status, q.status) : undefined,
-        q.from ? gte(orders.createdAt, dayStartCN(q.from)) : undefined,
-        q.to ? lt(orders.createdAt, dayStartCN(addDays(q.to, 1))) : undefined,
-      ),
-    )
+    .where(orderFilter(q))
     .orderBy(desc(orders.id));
+  if (q.limit === undefined) return query;
+  return query.limit(q.limit).offset(q.offset ?? 0);
 }

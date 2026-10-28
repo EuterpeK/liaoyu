@@ -1,17 +1,70 @@
-<block wx:if="{{me}}">
-  <view class="hero glass">
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
+</view>
+
+<view wx:elif="{{loading}}">
+  <view class="glass"><view class="sk sk-line short"></view><view class="sk sk-line"></view></view>
+</view>
+
+<block wx:else>
+  <view class="glass head">
     <view class="avatar tone-0 big">{{initial}}</view>
-    <view class="hero-body">
-      <view class="name">{{me.user.nickname || '用户' + me.user.id}}</view>
-      <view class="role-badge" wx:if="{{me.role === 'teacher'}}">老师 · Lv{{me.teacher.level}} · {{me.teacher.displayName}}</view>
-      <view class="role-badge student" wx:else>学员</view>
+    <view class="grow" style="margin-left: 28rpx">
+      <view class="title">{{me.role === 'teacher' ? me.teacher.displayName : (me.user.nickname || '用户' + me.user.id)}}</view>
+      <view style="margin-top: 10rpx">
+        <text class="pill pill-gold" wx:if="{{me.role === 'teacher'}}">老师 · Lv{{me.teacher.level}}</text>
+        <text class="pill pill-green" wx:else>学员</text>
+        <text class="muted" style="margin-left: 16rpx">ID {{me.user.id}}</text>
+      </view>
     </view>
   </view>
-  <view class="glass row">
-    <text class="muted">用户 ID</text>
-    <text class="val">{{me.user.id}}</text>
+
+  <!-- 老师：回复及时率 -->
+  <view class="glass stats" wx:if="{{me.role === 'teacher' && reply}}">
+    <view class="stat">
+      <view class="stat-v">{{reply.rate}}</view>
+      <view class="stat-k">近30天及时回复率</view>
+    </view>
+    <view class="stat">
+      <view class="stat-v">{{reply.onTime}}/{{reply.total}}</view>
+      <view class="stat-k">及时回复 / 咨询总数</view>
+    </view>
   </view>
-  <view class="signout-wrap">
-    <button class="btn-ghost" bindtap="onTapSwitch">切换账号（重新登录）</button>
+
+  <view class="glass flush" wx:if="{{me.role === 'teacher'}}">
+    <view class="cell" hover-class="cell-hover" data-url="/pages/teacher/schedule/schedule" bindtap="onTapGo">
+      <view class="cell-icon tone-0">排</view><text class="grow">排班设置</text><text class="cell-arrow">›</text>
+    </view>
+    <view class="cell" hover-class="cell-hover" data-url="/pages/teacher/packages/packages" bindtap="onTapGo">
+      <view class="cell-icon tone-2">套</view><text class="grow">套餐管理</text><text class="cell-arrow">›</text>
+    </view>
+    <view class="cell" hover-class="cell-hover" data-url="/pages/teacher/leaves/leaves" bindtap="onTapGo">
+      <view class="cell-icon tone-1">假</view><text class="grow">请假与代班</text><text class="cell-arrow">›</text>
+    </view>
+    <view class="cell" hover-class="cell-hover" data-url="/pages/teacher/students/students" bindtap="onTapGo">
+      <view class="cell-icon tone-3">生</view><text class="grow">我的学员</text><text class="cell-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="glass flush" wx:else>
+    <view class="cell" hover-class="cell-hover" data-url="/pages/orders/orders" bindtap="onTapGo">
+      <view class="cell-icon tone-2">单</view><text class="grow">我的订单</text><text class="cell-arrow">›</text>
+    </view>
+    <view class="cell" hover-class="cell-hover" data-url="/pages/choices/choices" bindtap="onTapGo">
+      <view class="cell-icon tone-1">选</view><text class="grow">请假选择</text><text class="cell-arrow">›</text>
+    </view>
+    <view class="cell" hover-class="cell-hover" bindtap="onTapApply">
+      <view class="cell-icon tone-3">师</view>
+      <view class="grow">
+        <view>{{apply.label}}</view>
+        <view class="muted">{{apply.hint}}</view>
+      </view>
+      <text class="cell-arrow" wx:if="{{apply.canApply}}">›</text>
+    </view>
+  </view>
+
+  <view class="out-wrap">
+    <button class="btn-ghost" bindtap="onTapLogout">{{isDev ? '切换账号（重新登录）' : '退出登录'}}</button>
   </view>
 </block>

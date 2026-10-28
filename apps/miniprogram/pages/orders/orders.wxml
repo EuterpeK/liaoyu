@@ -1,0 +1,30 @@
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
+</view>
+
+<view wx:elif="{{loading}}">
+  <view class="glass"><view class="sk sk-line short"></view><view class="sk sk-line"></view></view>
+</view>
+
+<block wx:else>
+  <view class="hero">
+    <view class="hero-title">我的订单</view>
+    <view class="hero-sub">最近 100 笔</view>
+  </view>
+  <view class="glass flush" wx:if="{{list.length}}">
+    <view class="cell" wx:for="{{list}}" wx:key="outTradeNo" hover-class="cell-hover" data-tid="{{item.teacherId}}" bindtap="onTapOrder">
+      <view class="grow">
+        <view class="line">
+          <text class="name">{{item.packageTitle}}</text>
+          <text class="price">¥{{item.yuan}}</text>
+        </view>
+        <view class="line">
+          <text class="muted">{{item.teacherName}} · {{item.typeText}} · {{item.time}}</text>
+          <text class="pill pill-{{item.tone}}">{{item.statusText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  <view class="empty" wx:else>还没有订单</view>
+</block>

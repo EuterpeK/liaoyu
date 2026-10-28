@@ -106,4 +106,23 @@ describe('订单、支付回调与我的服务接口', () => {
     const nobody = await loginUser(ctx, 'nobody');
     expect((await call(ctx, 'GET', '/api/teacher/students', { token: nobody.token })).statusCode).toBe(403);
   });
+
+  test('我的订单：只返回本人订单，含老师名与套餐名，需登录', async () => {
+    const w = await world();
+    await w.createOrder();
+    const other = await loginUser(w.ctx, 'u2');
+    await call(w.ctx, 'POST', '/api/orders', { token: other.token, body: { packageId: w.pkg } });
+
+    expect((await call(w.ctx, 'GET', '/api/orders')).statusCode).toBe(401);
+    const mine = (await call(w.ctx, 'GET', '/api/orders', { token: w.token })).json();
+    expect(mine).toHaveLength(1);
+    expect(mine[0]).toMatchObject({
+      teacherId: w.teacher,
+      teacherName: `老师${w.teacher}`,
+      packageTitle: '包月陪伴',
+      packageType: 'month',
+      amountCents: 3000,
+      status: 'pending',
+    });
+  });
 });

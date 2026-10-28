@@ -1,24 +1,46 @@
 const api = require('../../../utils/request.js');
-const { FEN } = require('../../../utils/format.js');
-
-const TYPE_TEXT = { single: '单次通话', month: '月度陪伴', quarter: '季度陪伴', year: '年度陪伴' };
+const { FEN, TYPE_TEXT } = require('../../../utils/format.js');
 
 Page({
-  data: { t: null, packages: [] },
+  data: { loading: true, error: '', t: null, packages: [], id: 0 },
 
-  async onLoad({ id }) {
-    const t = await api.get(`/api/teachers/${id}`).catch(() => null);
-    if (!t) return wx.showToast({ title: '老师不存在', icon: 'none' });
-    this.setData({
-      t: { ...t, initial: (t.displayName || '?')[0] },
-      packages: t.packages.map((p) => ({ ...p, typeText: TYPE_TEXT[p.type] || p.type, yuan: FEN(p.priceCents) })),
-    });
+  onLoad({ id }) {
+    this.setData({ id: Number(id) });
+    return this.reload();
+  },
+
+  onRetry() {
+    return this.reload();
+  },
+
+  async reload() {
+    this.setData({ loading: true, error: '' });
+    try {
+      const t = await api.get(`/api/teachers/${this.data.id}`, { silent: true });
+      wx.setNavigationBarTitle({ title: t.displayName });
+      this.setData({
+        t: { ...t, initial: (t.displayName || '?')[0] },
+        packages: t.packages.map((p) => ({
+          ...p,
+          typeText: TYPE_TEXT[p.type] || p.type,
+          daysText: p.type === 'single' ? '一次性' : `${p.days} 天`,
+          yuan: FEN(p.priceCents),
+        })),
+        loading: false,
+      });
+    } catch (e) {
+      this.setData({
+        loading: false,
+        error: e.kind === 'client' && e.status === 404 ? '老师不存在或已下架' : e.message || '加载失败，请重试',
+      });
+    }
   },
 
   onTapBuy(e) {
     const p = this.data.packages.find((x) => x.id === e.currentTarget.dataset.id);
+    const desc = `${this.data.t.displayName} · ${p.typeText} · ${p.daysText} · 通话 ${p.callQuota} 次`;
     wx.navigateTo({
-      url: `/pages/package/buy/buy?packageId=${p.id}&title=${encodeURIComponent(p.title)}&yuan=${p.yuan}`,
+      url: `/pages/package/buy/buy?packageId=${p.id}&title=${encodeURIComponent(p.title)}&yuan=${p.yuan}&desc=${encodeURIComponent(desc)}`,
     });
   },
 });

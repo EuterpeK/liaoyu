@@ -1,5 +1,20 @@
-<view wx:if="{{loading}}">
-  <view class="empty">正在为你准备…</view>
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
+</view>
+
+<!-- 骨架屏 -->
+<view wx:elif="{{loading}}">
+  <view class="glass" wx:for="{{[1, 2, 3]}}" wx:key="*this">
+    <view class="row">
+      <view class="sk avatar"></view>
+      <view class="grow" style="margin-left: 24rpx">
+        <view class="sk sk-line short"></view>
+        <view class="sk sk-line"></view>
+        <view class="sk sk-line mid"></view>
+      </view>
+    </view>
+  </view>
 </view>
 
 <!-- 学员：老师列表 -->
@@ -9,7 +24,8 @@
     <view class="hero-sub">每一位老师，都在这里陪你</view>
   </view>
 
-  <view class="filter" wx:if="{{directions.length}}">
+  <scroll-view scroll-x class="filter" wx:if="{{directions.length}}" enable-flex>
+    <view class="chip {{direction === '' ? 'chip-on' : ''}}" data-d="" bindtap="onTapDirection">全部</view>
     <view
       wx:for="{{directions}}"
       wx:key="*this"
@@ -17,42 +33,86 @@
       data-d="{{item}}"
       bindtap="onTapDirection"
     >{{item}}</view>
-  </view>
+  </scroll-view>
 
   <view class="glass teacher" wx:for="{{teachers}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapTeacher">
     <view class="avatar tone-{{item.tone}}">{{item.initial}}</view>
-    <view class="body">
+    <view class="grow body">
       <view class="line">
-        <text class="name">{{item.displayName}}</text>
-        <text class="level">Lv{{item.level}}</text>
-      </view>
-      <view class="muted intro">{{item.intro}}</view>
-      <view class="line bottom">
-        <view class="tags">
-          <text class="tag" wx:for="{{item.directions}}" wx:for-item="d" wx:key="*this">{{d}}</text>
+        <view class="row">
+          <text class="name">{{item.displayName}}</text>
+          <text class="level">Lv{{item.level}}</text>
         </view>
-        <text class="price" wx:if="{{item.minPriceCents}}">¥{{item.yuan}}<text class="price-unit"> 起</text></text>
+        <text class="price" wx:if="{{item.yuan}}">¥{{item.yuan}}<text class="price-unit"> 起</text></text>
+      </view>
+      <view class="muted clamp2 intro">{{item.intro || '这位老师还没有写自我介绍'}}</view>
+      <view class="tags">
+        <text class="tag" wx:for="{{item.directions}}" wx:for-item="d" wx:key="*this">{{d}}</text>
       </view>
     </view>
   </view>
-  <view class="empty" wx:if="{{!teachers.length}}">老师们正在路上，稍等片刻</view>
+  <view class="empty" wx:if="{{!teachers.length}}">{{direction ? '这个方向暂时没有老师' : '老师们正在路上，稍等片刻'}}</view>
 </block>
 
-<!-- 老师：今日概览 -->
+<!-- 老师：工作台 -->
 <block wx:else>
   <view class="hero">
-    <view class="hero-title">今日概览</view>
-    <view class="hero-sub">{{todayLabel}} · 共 {{appointments.length}} 条预约</view>
+    <view class="hero-title">工作台</view>
+    <view class="hero-sub">{{todayLabel}} · 今天也辛苦了</view>
   </view>
-  <view class="glass appt" wx:for="{{appointments}}" wx:key="id">
-    <view class="avatar tone-{{index % 4}}">{{item.initial}}</view>
-    <view class="appt-body">
-      <view class="line">
-        <text class="name">{{item.userNickname || '学员'}}</text>
-        <text class="status">{{item.statusText}}</text>
-      </view>
-      <view class="muted">{{item.date}} · {{item.hm}}</view>
+
+  <view class="banner" wx:if="{{inviteCount}}" bindtap="onTapInvites">
+    <view class="banner-body">
+      <view class="banner-title">{{inviteCount}} 条代班邀请待回复</view>
+      <view class="banner-sub">点击查看并回复</view>
+    </view>
+    <text class="cell-arrow">›</text>
+  </view>
+
+  <view class="glass stats">
+    <view class="stat">
+      <view class="stat-v">{{stats.students}}</view>
+      <view class="stat-k">服务中学员</view>
+    </view>
+    <view class="stat">
+      <view class="stat-v">{{stats.today}}</view>
+      <view class="stat-k">今日预约</view>
+    </view>
+    <view class="stat">
+      <view class="stat-v">{{stats.rate}}</view>
+      <view class="stat-k">近30天及时回复</view>
     </view>
   </view>
-  <view class="empty" wx:if="{{!appointments.length}}">今天还没有预约，安心休息</view>
+
+  <view class="glass grid">
+    <view class="entry" data-url="/pages/teacher/schedule/schedule" bindtap="onTapEntry">
+      <view class="entry-ico tone-0">排</view>
+      <text>排班设置</text>
+    </view>
+    <view class="entry" data-url="/pages/teacher/packages/packages" bindtap="onTapEntry">
+      <view class="entry-ico tone-2">套</view>
+      <text>套餐管理</text>
+    </view>
+    <view class="entry" data-url="/pages/teacher/leaves/leaves" bindtap="onTapEntry">
+      <view class="entry-ico tone-1">假</view>
+      <text>请假代班</text>
+    </view>
+    <view class="entry" data-url="/pages/teacher/students/students" bindtap="onTapEntry">
+      <view class="entry-ico tone-3">生</view>
+      <text>我的学员</text>
+    </view>
+  </view>
+
+  <view class="sec"><text class="sec-title">今日预约</text></view>
+  <view class="glass flush" wx:if="{{today.length}}">
+    <view class="cell" wx:for="{{today}}" wx:key="id">
+      <view class="avatar sm tone-{{index % 4}}" style="margin-right: 24rpx">{{item.initial}}</view>
+      <view class="grow">
+        <view class="name">{{item.peerName}}</view>
+        <view class="muted">{{item.hm}} - {{item.endHm}}</view>
+      </view>
+      <text class="pill pill-{{item.tone}}">{{item.statusText}}</text>
+    </view>
+  </view>
+  <view class="empty" wx:else>今天还没有预约，安心休息</view>
 </block>

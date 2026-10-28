@@ -1,0 +1,38 @@
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
+</view>
+
+<view wx:elif="{{loading}}">
+  <view class="glass" wx:for="{{[1, 2, 3]}}" wx:key="*this">
+    <view class="sk sk-line short"></view>
+    <view class="sk sk-line"></view>
+  </view>
+</view>
+
+<block wx:else>
+  <view class="hero">
+    <view class="line">
+      <view class="hero-title">消息</view>
+      <text class="sec-more" wx:if="{{unread}}" bindtap="onTapReadAll">全部已读</text>
+    </view>
+    <view class="hero-sub">{{unread ? unread + ' 条未读' : '没有未读消息'}}</view>
+  </view>
+
+  <view class="glass flush" wx:if="{{list.length}}">
+    <view class="cell" wx:for="{{list}}" wx:key="id" hover-class="cell-hover" data-id="{{item.id}}" bindtap="onTapItem">
+      <view class="grow">
+        <view class="row">
+          <view class="dot" wx:if="{{!item.isRead}}" style="margin-right: 12rpx"></view>
+          <text class="name {{item.isRead ? 'read' : ''}}">{{item.title}}</text>
+        </view>
+        <view class="muted clamp2" wx:if="{{item.body}}">{{item.body}}</view>
+      </view>
+      <view class="side">
+        <text class="muted">{{item.time}}</text>
+        <text class="cell-arrow" wx:if="{{item.url}}">›</text>
+      </view>
+    </view>
+  </view>
+  <view class="empty" wx:else>还没有消息</view>
+</block>

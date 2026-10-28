@@ -1,0 +1,71 @@
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
+</view>
+
+<view wx:elif="{{loading}}">
+  <view class="glass"><view class="sk sk-line short"></view><view class="sk sk-line"></view></view>
+</view>
+
+<block wx:else>
+  <view class="pb">
+    <view class="hero">
+      <view class="hero-title">套餐管理</view>
+      <view class="hero-sub">下架后学员不可再购买，已购买的服务不受影响</view>
+    </view>
+
+    <view class="glass" wx:for="{{list}}" wx:key="id">
+      <view class="line">
+        <view class="row">
+          <text class="name">{{item.title}}</text>
+          <text class="pill pill-blue" style="margin-left: 12rpx">{{item.typeText}}</text>
+        </view>
+        <switch checked="{{item.onSale}}" color="#1d7a52" disabled="{{busyId === item.id}}" data-id="{{item.id}}" bindchange="onSwitchSale" />
+      </view>
+      <view class="line" style="margin-top: 12rpx">
+        <text class="muted">{{item.daysText}} · 通话 {{item.callQuota}} 次 · {{item.replyHours}} 小时内回复</text>
+        <view class="row">
+          <text class="price">¥{{item.yuan}}</text>
+          <button class="btn-sm" data-id="{{item.id}}" bindtap="onTapPrice">改价</button>
+        </view>
+      </view>
+      <view class="muted off" wx:if="{{!item.onSale}}">已下架</view>
+    </view>
+    <view class="empty-card" wx:if="{{!list.length}}">还没有套餐，点击下方按钮创建第一个</view>
+
+    <block wx:if="{{showForm}}">
+      <view class="sec"><text class="sec-title">新建套餐</text></view>
+      <view class="glass">
+        <view class="field-label">类型</view>
+        <view class="chips">
+          <view wx:for="{{types}}" wx:key="k" class="chip {{form.type === item.k ? 'chip-on' : ''}}" data-k="{{item.k}}" bindtap="onPickType">{{item.text}}</view>
+        </view>
+        <view class="hint" wx:if="{{form.type === 'year'}}">年包仅 Lv3 及以上老师可开放</view>
+      </view>
+      <view class="glass flush">
+        <view class="field">
+          <view class="field-label">套餐名称</view>
+          <input class="input" placeholder="例如：月度陪伴" placeholder-class="input-ph" maxlength="50" value="{{form.title}}" data-k="title" bindinput="onInput" />
+        </view>
+        <view class="field">
+          <view class="field-label">价格（元）</view>
+          <input class="input" type="digit" placeholder="例如：199" placeholder-class="input-ph" value="{{form.yuan}}" data-k="yuan" bindinput="onInput" />
+        </view>
+        <view class="field" wx:if="{{form.type !== 'single'}}">
+          <view class="field-label">服务期内通话次数</view>
+          <input class="input" type="number" value="{{form.callQuota}}" data-k="callQuota" bindinput="onInput" />
+        </view>
+        <view class="field">
+          <view class="field-label">承诺回复时限（小时）</view>
+          <input class="input" type="number" value="{{form.replyHours}}" data-k="replyHours" bindinput="onInput" />
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view class="bar">
+    <button class="btn" wx:if="{{showForm}}" disabled="{{submitting}}" bindtap="onSubmit">{{submitting ? '创建中…' : '创建套餐'}}</button>
+    <button class="btn" wx:else bindtap="onTapToggleForm">新建套餐</button>
+    <view class="cancel" wx:if="{{showForm}}" bindtap="onTapToggleForm">取消</view>
+  </view>
+</block>

@@ -1,66 +1,51 @@
-.who {
-  display: flex;
-  align-items: baseline;
-}
-.pre {
-  color: #6f8b7d;
-  font-size: 28rpx;
-  margin: 0 10rpx;
-}
-.name {
-  font-size: 40rpx;
-  font-weight: 700;
-}
 .days {
+  white-space: nowrap;
   display: flex;
-  flex-wrap: wrap;
-  margin-top: 24rpx;
+  padding: 16rpx 24rpx 4rpx;
 }
 .day {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1rpx solid rgba(46, 158, 107, 0.25);
-  border-radius: 999rpx;
-  padding: 12rpx 26rpx;
-  margin: 0 16rpx 16rpx 0;
-}
-.day-label {
-  font-size: 24rpx;
-  color: #4a6b5a;
+  flex-shrink: 0;
+  margin-right: 14rpx;
+  padding: 20rpx 28rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1rpx solid rgba(31, 59, 44, 0.08);
+  font-size: 26rpx;
 }
 .day-on {
-  background: linear-gradient(135deg, #3cb47c, #1d7a52);
+  background: linear-gradient(135deg, var(--green-2), var(--green));
   border-color: transparent;
-  box-shadow: 0 8rpx 20rpx rgba(29, 122, 82, 0.28);
-}
-.day-on .day-label {
   color: #fff;
   font-weight: 600;
-}
-.sec-title.in-card {
-  font-size: 30rpx;
-  font-weight: 700;
-  margin-bottom: 20rpx;
 }
 .slots {
   display: flex;
   flex-wrap: wrap;
+  gap: 18rpx;
+}
+.slot,
+.slot-sk {
+  width: calc((100% - 54rpx) / 4);
+  box-sizing: border-box;
 }
 .slot {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1rpx solid rgba(46, 158, 107, 0.25);
-  border-radius: 18rpx;
-  padding: 18rpx 34rpx;
-  margin: 0 16rpx 16rpx 0;
-  font-size: 28rpx;
-  color: #2c4a3a;
+  text-align: center;
+  padding: 20rpx 0;
+  border-radius: 20rpx;
+  background: rgba(60, 180, 124, 0.1);
+  border: 1rpx solid rgba(60, 180, 124, 0.25);
+  color: var(--green);
+  font-weight: 600;
 }
 .slot-on {
-  background: linear-gradient(135deg, #3cb47c, #1d7a52);
+  background: linear-gradient(135deg, var(--green-2), var(--green));
   border-color: transparent;
   color: #fff;
-  font-weight: 600;
-  box-shadow: 0 8rpx 20rpx rgba(29, 122, 82, 0.28);
 }
-.pay-wrap {
-  margin: 40rpx 48rpx 0;
+.slot-sk {
+  height: 76rpx;
+  border-radius: 20rpx;
+}
+.retry-sm {
+  margin: 20rpx auto 0;
 }

@@ -1,0 +1,51 @@
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
+</view>
+
+<view wx:elif="{{loading}}">
+  <view class="glass"><view class="sk sk-line short"></view><view class="sk sk-line"></view><view class="sk sk-line mid"></view></view>
+</view>
+
+<block wx:else>
+  <view class="hero">
+    <view class="hero-title">请假选择</view>
+    <view class="hero-sub">老师请假期间，你可以等待，或更换代班老师</view>
+  </view>
+
+  <view class="sec"><text class="sec-title">待你选择</text></view>
+  <view class="glass" wx:for="{{open}}" wx:key="id">
+    <view class="line">
+      <text class="name">{{item.ownerName}} 请假</text>
+      <text class="pill pill-gold">{{item.left}}</text>
+    </view>
+    <view class="muted">{{item.range}}</view>
+
+    <button class="btn-ghost act" data-id="{{item.id}}" disabled="{{busyId === item.id}}" bindtap="onTapWait">等待 {{item.ownerName}} 回来</button>
+
+    <view class="sub-title" wx:if="{{item.candidates.length}}">或选择代班老师</view>
+    <view class="cand" wx:for="{{item.candidates}}" wx:for-item="c" wx:key="teacherId">
+      <view class="avatar sm tone-{{index % 4}}" style="margin-right: 20rpx">{{c.initial}}</view>
+      <view class="grow">
+        <text class="name">{{c.displayName}}</text>
+        <text class="level">Lv{{c.level}}</text>
+      </view>
+      <button class="btn-sm primary" data-id="{{item.id}}" data-tid="{{c.teacherId}}" data-name="{{c.displayName}}" disabled="{{busyId === item.id}}" bindtap="onTapSubstitute">选TA</button>
+    </view>
+    <view class="muted" wx:if="{{!item.candidates.length}}" style="margin-top: 20rpx">暂时没有代班老师同意，可先等待，稍后再来看看</view>
+  </view>
+  <view class="empty-card" wx:if="{{!open.length}}">没有需要你选择的事项</view>
+
+  <block wx:if="{{closed.length}}">
+    <view class="sec"><text class="sec-title">已处理</text></view>
+    <view class="glass flush">
+      <view class="cell" wx:for="{{closed}}" wx:key="id">
+        <view class="grow">
+          <view class="name">{{item.ownerName}} 请假</view>
+          <view class="muted">{{item.range}}<text wx:if="{{item.pickedName}}"> · 代班 {{item.pickedName}}</text></view>
+        </view>
+        <text class="pill pill-{{item.resultTone}}">{{item.resultText}}</text>
+      </view>
+    </view>
+  </block>
+</block>

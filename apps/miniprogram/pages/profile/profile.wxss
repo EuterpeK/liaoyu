@@ -1,43 +1,11 @@
-.hero {
+.head {
   display: flex;
   align-items: center;
-  margin-top: 32rpx;
 }
-.avatar.big {
-  width: 128rpx;
-  height: 128rpx;
-  font-size: 56rpx;
-}
-.hero-body {
-  margin-left: 28rpx;
-}
-.name {
+.title {
   font-size: 40rpx;
   font-weight: 700;
 }
-.role-badge {
-  display: inline-block;
-  margin-top: 14rpx;
-  font-size: 22rpx;
-  font-weight: 600;
-  color: #1d7a52;
-  background: rgba(60, 180, 124, 0.14);
-  border-radius: 999rpx;
-  padding: 6rpx 22rpx;
-}
-.role-badge.student {
-  color: #2b7f8c;
-  background: rgba(86, 184, 194, 0.14);
-}
-.row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.val {
-  font-size: 28rpx;
-  font-weight: 600;
-}
-.signout-wrap {
-  margin: 48rpx 48rpx 0;
+.out-wrap {
+  margin: 48rpx 40rpx;
 }

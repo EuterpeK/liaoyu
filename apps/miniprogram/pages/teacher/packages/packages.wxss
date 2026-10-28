@@ -1,0 +1,15 @@
+.off {
+  margin-top: 8rpx;
+  color: var(--red);
+}
+.hint {
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  color: var(--gold);
+}
+.cancel {
+  text-align: center;
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: var(--sub);
+}

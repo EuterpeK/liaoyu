@@ -1,0 +1,10 @@
+.read {
+  font-weight: 400;
+  color: var(--sub);
+}
+.side {
+  margin-left: 20rpx;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}

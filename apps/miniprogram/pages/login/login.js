@@ -1,4 +1,5 @@
 const auth = require('../../utils/auth.js');
+const { isDev } = require('../../config/env.js');
 
 /** 开发测试账号（与 pnpm -F @liaoyu/server seed 的种子数据一一对应） */
 const DEV_ACCOUNTS = [
@@ -12,7 +13,7 @@ const DEV_ACCOUNTS = [
 ];
 
 Page({
-  data: { loading: '', accounts: DEV_ACCOUNTS },
+  data: { loading: '', isDev, accounts: isDev ? DEV_ACCOUNTS : [] },
 
   async onTapLogin() {
     if (this.data.loading) return;
@@ -28,7 +29,7 @@ Page({
 
   async onTapAccount(e) {
     const code = e.currentTarget.dataset.code;
-    if (this.data.loading) return;
+    if (!isDev || this.data.loading) return;
     this.setData({ loading: code });
     try {
       const me = await auth.loginAs(code);

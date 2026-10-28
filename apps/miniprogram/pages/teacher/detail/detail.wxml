@@ -1,35 +1,48 @@
-<block wx:if="{{t}}">
-  <view class="hero glass">
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
+</view>
+
+<view wx:elif="{{loading}}">
+  <view class="glass"><view class="sk sk-line short"></view><view class="sk sk-line"></view><view class="sk sk-line mid"></view></view>
+</view>
+
+<block wx:else>
+  <view class="glass profile">
     <view class="avatar tone-0 big">{{t.initial}}</view>
-    <view class="hero-body">
-      <view class="line">
-        <text class="name">{{t.displayName}}</text>
+    <view class="grow" style="margin-left: 28rpx">
+      <view class="row">
+        <text class="who">{{t.displayName}}</text>
         <text class="level">Lv{{t.level}}</text>
       </view>
-      <view class="tags">
+      <view class="tags" style="margin-top: 14rpx">
         <text class="tag" wx:for="{{t.directions}}" wx:key="*this">{{item}}</text>
       </view>
     </view>
   </view>
-  <view class="glass">
-    <view class="muted intro">{{t.intro}}</view>
-  </view>
+
+  <view class="sec"><text class="sec-title">关于我</text></view>
+  <view class="glass"><view class="intro">{{t.intro || '这位老师还没有写自我介绍'}}</view></view>
 
   <view class="sec">
     <text class="sec-title">陪伴套餐</text>
     <text class="muted sec-sub">选择一种节奏，开始同行</text>
   </view>
-  <view class="glass pkg" wx:for="{{packages}}" wx:key="id">
+  <view class="glass" wx:for="{{packages}}" wx:key="id">
     <view class="line">
-      <text class="pkg-title">{{item.title}}</text>
-      <text class="price">¥{{item.yuan}}</text>
+      <view class="row">
+        <text class="pkg-title">{{item.title}}</text>
+        <text class="pill pill-blue" style="margin-left: 12rpx">{{item.typeText}}</text>
+      </view>
+      <text class="price big-price">¥{{item.yuan}}</text>
     </view>
     <view class="feats">
-      <text class="feat">{{item.typeText}}</text>
+      <text class="feat">服务期 {{item.daysText}}</text>
       <text class="feat">{{item.replyHours}}小时内回复</text>
       <text class="feat" wx:if="{{item.callQuota}}">通话 ×{{item.callQuota}}</text>
     </view>
     <button class="btn pkg-btn" data-id="{{item.id}}" bindtap="onTapBuy">选择这个节奏</button>
   </view>
   <view class="empty" wx:if="{{!packages.length}}">该老师暂无在售套餐</view>
+  <view class="pb-sm"></view>
 </block>

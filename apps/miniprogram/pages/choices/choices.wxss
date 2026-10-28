@@ -1,0 +1,14 @@
+.act {
+  margin-top: 28rpx;
+}
+.sub-title {
+  margin: 32rpx 0 8rpx;
+  font-size: 24rpx;
+  color: var(--sub);
+}
+.cand {
+  display: flex;
+  align-items: center;
+  padding: 18rpx 0;
+  border-top: 1rpx solid var(--line);
+}

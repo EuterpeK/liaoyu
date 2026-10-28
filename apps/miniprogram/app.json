@@ -2,11 +2,19 @@
   "pages": [
     "pages/index/index",
     "pages/services/services",
+    "pages/messages/messages",
     "pages/profile/profile",
     "pages/login/login",
     "pages/teacher/detail/detail",
     "pages/package/buy/buy",
-    "pages/appointment/book/book"
+    "pages/appointment/book/book",
+    "pages/orders/orders",
+    "pages/choices/choices",
+    "pages/teacher/apply/apply",
+    "pages/teacher/schedule/schedule",
+    "pages/teacher/packages/packages",
+    "pages/teacher/leaves/leaves",
+    "pages/teacher/students/students"
   ],
   "window": {
     "navigationBarBackgroundColor": "#e8f3ec",
@@ -20,9 +28,30 @@
     "backgroundColor": "#f7fbf8",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/index/index", "text": "首页" },
-      { "pagePath": "pages/services/services", "text": "服务" },
-      { "pagePath": "pages/profile/profile", "text": "我的" }
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "assets/tab/home.png",
+        "selectedIconPath": "assets/tab/home-on.png"
+      },
+      {
+        "pagePath": "pages/services/services",
+        "text": "服务",
+        "iconPath": "assets/tab/service.png",
+        "selectedIconPath": "assets/tab/service-on.png"
+      },
+      {
+        "pagePath": "pages/messages/messages",
+        "text": "消息",
+        "iconPath": "assets/tab/msg.png",
+        "selectedIconPath": "assets/tab/msg-on.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "assets/tab/me.png",
+        "selectedIconPath": "assets/tab/me-on.png"
+      }
     ]
   },
   "sitemapLocation": "sitemap.json"

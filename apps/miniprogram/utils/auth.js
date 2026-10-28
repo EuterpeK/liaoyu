@@ -1,36 +1,22 @@
-const { baseURL } = require('../config/env.js');
+const http = require('./http.js');
 
 const TOKEN_KEY = 'liaoyu_token';
 
-function raw(method, path, data) {
-  return new Promise((resolve, reject) => {
-    wx.request({
-      url: baseURL + path,
-      method,
-      data,
-      success: (res) => (res.statusCode >= 200 && res.statusCode < 300 ? resolve(res.data) : reject(res)),
-      fail: () => reject(new Error('network')),
-    });
-  });
-}
-
 function wxLoginCode() {
-  return new Promise((resolve, reject) => wx.login({ success: (r) => resolve(r.code), fail: reject }));
-}
-
-function fetchMe() {
-  return new Promise((resolve, reject) => {
-    wx.request({
-      url: `${baseURL}/api/auth/me`,
-      header: { Authorization: `Bearer ${getToken()}` },
-      success: (res) => (res.statusCode === 200 ? resolve(res.data) : reject(res)),
-      fail: () => reject(new Error('network')),
-    });
-  });
+  return new Promise((resolve, reject) =>
+    wx.login({
+      success: (r) => resolve(r.code),
+      fail: () => reject(new http.ApiError('微信登录失败，请重试', { kind: 'client' })),
+    }),
+  );
 }
 
 function getToken() {
   return wx.getStorageSync(TOKEN_KEY) || '';
+}
+
+function fetchMe() {
+  return http.send({ method: 'GET', path: '/api/auth/me', token: getToken() });
 }
 
 function withRole(me) {
@@ -38,16 +24,23 @@ function withRole(me) {
   return { ...me, role };
 }
 
-/** 确保已登录并返回 { user, teacher, role }；role: 'teacher' | 'student' */
-async function ensureLogin() {
-  const token = wx.getStorageSync(TOKEN_KEY);
-  if (token) {
-    const me = await fetchMe().catch(() => null);
-    if (me) return withRole(me);
-  }
-  const res = await raw('POST', '/api/auth/wxlogin', { code: await wxLoginCode() });
+async function wxLogin(code) {
+  const res = await http.send({ method: 'POST', path: '/api/auth/wxlogin', data: { code } });
   wx.setStorageSync(TOKEN_KEY, res.token);
   return withRole(await fetchMe());
+}
+
+/** 确保已登录并返回 { user, teacher, role }；role: 'teacher' | 'student' */
+async function ensureLogin() {
+  if (getToken()) {
+    try {
+      return withRole(await fetchMe());
+    } catch (e) {
+      // 断网/服务端故障时保留仍可能有效的 token，交给上层重试；其余情况走重新登录
+      if (e.kind === 'network' || e.kind === 'server') throw e;
+    }
+  }
+  return wxLogin(await wxLoginCode());
 }
 
 /** 401 时强制重登（request 层调用）；并发调用共享同一 in-flight Promise */
@@ -67,9 +60,12 @@ function relogin() {
 async function loginAs(code) {
   wx.removeStorageSync(TOKEN_KEY);
   getApp().resetLogin();
-  const res = await raw('POST', '/api/auth/wxlogin', { code });
-  wx.setStorageSync(TOKEN_KEY, res.token);
-  return withRole(await fetchMe());
+  return wxLogin(code);
 }
 
-module.exports = { ensureLogin, relogin, loginAs, fetchMe, withRole, getToken };
+function logout() {
+  wx.removeStorageSync(TOKEN_KEY);
+  getApp().resetLogin();
+}
+
+module.exports = { ensureLogin, relogin, loginAs, logout, fetchMe, withRole, getToken };

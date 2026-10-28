@@ -1,12 +1,30 @@
-<view class="glass order">
-  <view class="order-label">确认订单</view>
-  <view class="line">
-    <text class="title">{{title}}</text>
+<view class="pb">
+  <view class="hero">
+    <view class="hero-title">确认订单</view>
+    <view class="hero-sub">支付成功后服务立即开通</view>
+  </view>
+
+  <view class="glass">
+    <view class="line">
+      <text class="title">{{title}}</text>
+      <text class="price big">¥{{yuan}}</text>
+    </view>
+    <view class="muted" wx:if="{{desc}}">{{desc}}</view>
+  </view>
+
+  <view class="sec"><text class="sec-title">服务说明</text></view>
+  <view class="glass notes">
+    <view class="note"><text class="dot-g"></text>服务期内可在「服务」页自助预约通话</view>
+    <view class="note"><text class="dot-g"></text>老师请假时，你可选择等待或更换代班老师</view>
+    <view class="note"><text class="dot-g"></text>请通过平台完成沟通与支付，避免私下交易风险</view>
+  </view>
+</view>
+
+<view class="bar">
+  <view class="total">
+    <text class="muted">合计</text>
     <text class="price">¥{{yuan}}</text>
   </view>
-  <view class="muted">支付后立即开启专属陪伴服务</view>
-</view>
-<view class="pay-wrap">
   <button class="btn pay-btn" disabled="{{paying || paid}}" bindtap="onTapPay">
     {{paid ? '已开启 ✓' : paying ? '正在开启…' : '立即开启'}}
   </button>

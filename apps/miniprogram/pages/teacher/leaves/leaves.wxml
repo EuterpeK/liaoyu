@@ -1,0 +1,94 @@
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
+</view>
+
+<view wx:elif="{{loading}}">
+  <view class="glass"><view class="sk sk-line short"></view><view class="sk sk-line"></view><view class="sk sk-line mid"></view></view>
+</view>
+
+<block wx:else>
+  <view class="pb">
+    <view class="hero">
+      <view class="hero-title">请假与代班</view>
+      <view class="hero-sub">请假需指定 1~3 位代班老师，学员可选择等待或更换</view>
+    </view>
+
+    <!-- 申请表单 -->
+    <block wx:if="{{showForm}}">
+      <view class="sec"><text class="sec-title">申请请假</text></view>
+      <view class="glass flush">
+        <view class="field">
+          <view class="field-label">开始日期</view>
+          <picker mode="date" start="{{today}}" value="{{form.startDate}}" data-k="startDate" bindchange="onPickDate">
+            <view class="picker {{form.startDate ? '' : 'ph'}}">{{form.startDate || '请选择'}}</view>
+          </picker>
+        </view>
+        <view class="field">
+          <view class="field-label">结束日期（含）</view>
+          <picker mode="date" start="{{form.startDate || today}}" value="{{form.endDate}}" data-k="endDate" bindchange="onPickDate">
+            <view class="picker {{form.endDate ? '' : 'ph'}}">{{form.endDate || '请选择'}}</view>
+          </picker>
+        </view>
+        <view class="field">
+          <view class="field-label">原因（选填）</view>
+          <input class="input" placeholder="例如：外出学习" placeholder-class="input-ph" maxlength="200" value="{{form.reason}}" bindinput="onInputReason" />
+        </view>
+      </view>
+
+      <view class="sec"><text class="sec-title">指定代班老师</text><text class="muted">1~3 位</text></view>
+      <view class="glass">
+        <view class="chips">
+          <view wx:for="{{teachers}}" wx:key="id" class="chip {{item.on ? 'chip-on' : ''}}" data-i="{{index}}" bindtap="onTapCandidate">{{item.displayName}} · Lv{{item.level}}</view>
+        </view>
+        <view class="muted" wx:if="{{!teachers.length}}">暂无其他老师可选</view>
+      </view>
+    </block>
+
+    <!-- 收到的代班邀请 -->
+    <block wx:if="{{invites.length}}">
+      <view class="sec"><text class="sec-title">代班邀请</text></view>
+      <view class="glass flush">
+        <view class="cell" wx:for="{{invites}}" wx:key="leaveId">
+          <view class="grow">
+            <view class="name">{{item.ownerName}} 请假</view>
+            <view class="muted">{{item.range}}</view>
+            <view class="muted" wx:if="{{item.reason}}">原因：{{item.reason}}</view>
+          </view>
+          <block wx:if="{{item.pending}}">
+            <button class="btn-sm danger" data-id="{{item.leaveId}}" data-accept="{{false}}" disabled="{{busyKey === 'i' + item.leaveId}}" bindtap="onTapRespond">拒绝</button>
+            <button class="btn-sm primary" data-id="{{item.leaveId}}" data-accept="{{true}}" disabled="{{busyKey === 'i' + item.leaveId}}" bindtap="onTapRespond">同意</button>
+          </block>
+          <text wx:else class="pill pill-{{item.tone}}">{{item.statusText}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 我的请假 -->
+    <view class="sec"><text class="sec-title">我的请假</text></view>
+    <view class="glass" wx:for="{{leaves}}" wx:key="id">
+      <view class="line">
+        <text class="name">{{item.range}}</text>
+        <text class="pill {{item.open ? 'pill-green' : 'pill-gray'}}">{{item.open ? '进行中/未开始' : '已结束'}}</text>
+      </view>
+      <view class="muted">共 {{item.days}} 天<text wx:if="{{item.reason}}"> · {{item.reason}}</text></view>
+      <view class="cand" wx:for="{{item.candidates}}" wx:for-item="c" wx:key="teacherId">
+        <view class="avatar sm tone-{{index % 4}}" style="margin-right: 20rpx">{{c.initial}}</view>
+        <view class="grow">
+          <text class="name">{{c.displayName}}</text>
+          <text class="level">Lv{{c.level}}</text>
+        </view>
+        <button wx:if="{{c.canRevoke}}" class="btn-sm danger" data-lid="{{item.id}}" data-tid="{{c.teacherId}}" data-name="{{c.displayName}}" disabled="{{busyKey === 'r' + item.id + '-' + c.teacherId}}" bindtap="onTapRevoke">撤销</button>
+        <text wx:else class="pill pill-{{c.tone}}">{{c.statusText}}</text>
+      </view>
+      <view class="muted summary" wx:if="{{item.summary}}">{{item.summary}}</view>
+    </view>
+    <view class="empty-card" wx:if="{{!leaves.length}}">还没有请假记录</view>
+  </view>
+
+  <view class="bar">
+    <button class="btn" wx:if="{{showForm}}" disabled="{{submitting}}" bindtap="onSubmit">{{submitting ? '提交中…' : '提交请假'}}</button>
+    <button class="btn" wx:else bindtap="onTapToggleForm">申请请假</button>
+    <view class="cancel" wx:if="{{showForm}}" bindtap="onTapToggleForm">取消</view>
+  </view>
+</block>

@@ -4,21 +4,70 @@
   align-items: center;
   padding: 90rpx 0 60rpx;
 }
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.mark {
+  width: 132rpx;
+  height: 132rpx;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 68rpx;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #4cc08a, #1d7a52);
+  box-shadow: 0 16rpx 40rpx rgba(29, 122, 82, 0.35);
+}
 .logo {
-  font-size: 72rpx;
+  margin-top: 28rpx;
+  font-size: 60rpx;
   font-weight: 800;
   letter-spacing: 4rpx;
   color: #1d5c3f;
 }
 .slogan {
-  margin-top: 14rpx;
-  color: #6f8b7d;
+  margin-top: 10rpx;
+  color: var(--sub);
   font-size: 26rpx;
   letter-spacing: 6rpx;
 }
+.points {
+  width: 80%;
+  margin-top: 64rpx;
+}
+.point {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 0;
+  font-size: 27rpx;
+  color: #3d5a4b;
+}
+.p-ico {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: rgba(60, 180, 124, 0.18);
+  color: var(--green);
+  font-size: 24rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
 .login-btn {
   width: 78%;
-  margin-top: 60rpx;
+  margin-top: 56rpx;
+}
+.tips {
+  margin-top: 20rpx;
+  font-size: 22rpx;
+  color: var(--hint);
 }
 .dev {
   width: 86%;
@@ -36,7 +85,7 @@
 }
 .group-label {
   font-size: 24rpx;
-  color: #6f8b7d;
+  color: var(--sub);
   margin-bottom: 12rpx;
 }
 .accs {
@@ -62,5 +111,5 @@
 .acc-role {
   margin-top: 4rpx;
   font-size: 20rpx;
-  color: #6f8b7d;
+  color: var(--sub);
 }

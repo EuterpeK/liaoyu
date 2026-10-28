@@ -1,0 +1,43 @@
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
+</view>
+
+<view wx:elif="{{loading}}">
+  <view class="glass"><view class="sk sk-line short"></view><view class="sk sk-line"></view></view>
+</view>
+
+<block wx:else>
+  <view class="hero">
+    <view class="hero-title">我的学员</view>
+    <view class="hero-sub">服务中 {{active.length}} 位</view>
+  </view>
+
+  <view class="glass flush" wx:if="{{active.length}}">
+    <view class="cell" wx:for="{{active}}" wx:key="id">
+      <view class="avatar sm tone-{{item.tone}}" style="margin-right: 24rpx">{{item.initial}}</view>
+      <view class="grow">
+        <view class="line">
+          <text class="name">{{item.name}}</text>
+          <text class="pill pill-{{item.statusTone}}">{{item.statusText}}</text>
+        </view>
+        <view class="muted">{{item.typeText}} · 剩 {{item.left}} 天 · 通话余 {{item.callsLeft}} 次</view>
+        <view class="muted">服务至 {{item.endDate}}</view>
+      </view>
+    </view>
+  </view>
+  <view class="empty-card" wx:else>还没有服务中的学员</view>
+
+  <block wx:if="{{past.length}}">
+    <view class="sec"><text class="sec-title">历史学员</text></view>
+    <view class="glass flush">
+      <view class="cell" wx:for="{{past}}" wx:key="id">
+        <view class="grow">
+          <view class="name">{{item.name}}</view>
+          <view class="muted">{{item.typeText}} · {{item.startDate}} 至 {{item.endDate}}</view>
+        </view>
+        <text class="pill pill-{{item.statusTone}}">{{item.statusText}}</text>
+      </view>
+    </view>
+  </block>
+</block>

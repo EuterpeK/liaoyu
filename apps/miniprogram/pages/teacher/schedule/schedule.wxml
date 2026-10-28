@@ -1,0 +1,50 @@
+<view wx:if="{{error}}" class="empty">
+  <view>{{error}}</view>
+  <button class="btn retry" bindtap="onRetry">重试</button>
+</view>
+
+<view wx:elif="{{loading}}">
+  <view class="glass"><view class="sk sk-line short"></view><view class="sk sk-line"></view></view>
+</view>
+
+<block wx:else>
+  <view class="pb">
+    <view class="hero">
+      <view class="hero-title">排班设置</view>
+      <view class="hero-sub">每周固定可约时段，学员只能在这些时间预约，每次通话 60 分钟</view>
+    </view>
+
+    <scroll-view scroll-x enable-flex class="days">
+      <view wx:for="{{days}}" wx:key="wd" class="day {{wd === item.wd ? 'day-on' : ''}}" data-wd="{{item.wd}}" bindtap="onTapDay">
+        <text class="day-label">{{item.label}}</text>
+        <text class="day-count {{item.count ? 'has' : ''}}">{{item.count ? item.count + ' 段' : '休息'}}</text>
+      </view>
+    </scroll-view>
+
+    <view class="glass flush">
+      <view class="cell" wx:for="{{ranges}}" wx:key="start">
+        <text class="grow strong">{{item.start}} - {{item.end}}</text>
+        <button class="btn-sm danger" data-start="{{item.start}}" bindtap="onTapRemove">删除</button>
+      </view>
+      <view class="empty-card" wx:if="{{!ranges.length}}">这一天没有排班，在下方添加时段</view>
+    </view>
+
+    <view class="sec"><text class="sec-title">添加时段</text></view>
+    <view class="glass add">
+      <picker mode="time" value="{{start}}" bindchange="onStart">
+        <view class="time-box"><text class="muted">开始</text><text class="time">{{start}}</text></view>
+      </picker>
+      <text class="to">至</text>
+      <picker mode="time" value="{{end}}" bindchange="onEnd">
+        <view class="time-box"><text class="muted">结束</text><text class="time">{{end}}</text></view>
+      </picker>
+      <button class="btn-sm primary add-btn" bindtap="onTapAdd">添加</button>
+    </view>
+
+    <view class="copy" bindtap="onTapCopyWorkdays">把这一天复制到周一至周五 ›</view>
+  </view>
+
+  <view class="bar">
+    <button class="btn" disabled="{{!dirty || saving}}" bindtap="onTapSave">{{saving ? '保存中…' : dirty ? '保存排班' : '暂无修改'}}</button>
+  </view>
+</block>

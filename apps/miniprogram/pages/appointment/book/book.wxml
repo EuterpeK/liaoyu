@@ -1,35 +1,34 @@
-<view class="glass">
-  <view class="who">
-    <text class="pre">与</text>
-    <text class="name">{{name}}</text>
-    <text class="pre">的约定</text>
+<view class="pb">
+  <view class="hero">
+    <view class="hero-title">预约通话</view>
+    <view class="hero-sub">与 {{name}} 的约定 · 每次 60 分钟</view>
   </view>
-  <view class="days">
-    <view
-      wx:for="{{days}}"
-      wx:key="date"
-      class="day {{date === item.date ? 'day-on' : ''}}"
-      data-d="{{item.date}}"
-      bindtap="onTapDay"
-    >
+
+  <scroll-view scroll-x enable-flex class="days">
+    <view wx:for="{{days}}" wx:key="date" class="day {{date === item.date ? 'day-on' : ''}}" data-d="{{item.date}}" bindtap="onTapDay">
       <view class="day-label">{{item.label}}</view>
     </view>
+  </scroll-view>
+
+  <view class="sec"><text class="sec-title">可约时段</text><text class="muted">{{date}}</text></view>
+  <view class="glass">
+    <view wx:if="{{loadingSlots}}" class="slots">
+      <view class="sk slot-sk" wx:for="{{[1, 2, 3, 4, 5, 6]}}" wx:key="*this"></view>
+    </view>
+    <view wx:elif="{{slotsError}}" class="empty-card">
+      <view>{{slotsError}}</view>
+      <button class="btn-sm retry-sm" bindtap="loadSlots">重试</button>
+    </view>
+    <block wx:else>
+      <view class="slots">
+        <view wx:for="{{slots}}" wx:key="*this" class="slot {{chosen === item ? 'slot-on' : ''}}" data-s="{{item}}" bindtap="onTapSlot">{{item}}</view>
+      </view>
+      <view class="empty-card" wx:if="{{!slots.length}}">这一天老师暂无可约时段，换一天看看</view>
+    </block>
   </view>
 </view>
-<view class="glass">
-  <view class="sec-title in-card">可约时段 · {{date}}</view>
-  <view class="slots">
-    <view
-      wx:for="{{slots}}"
-      wx:key="*this"
-      class="slot {{chosen === item ? 'slot-on' : ''}}"
-      data-s="{{item}}"
-      bindtap="onTapSlot"
-    >{{item}}</view>
-  </view>
-  <view class="empty" wx:if="{{!slots.length}}">这一天老师暂无可约时段</view>
-</view>
-<view class="pay-wrap">
+
+<view class="bar">
   <button class="btn" disabled="{{!chosen || booking}}" bindtap="onTapBook">
     {{booking ? '正在预约…' : chosen ? '预约 ' + date + ' ' + chosen : '先挑一个时段吧'}}
   </button>

@@ -1,0 +1,38 @@
+<view class="pb">
+  <view class="hero">
+    <view class="hero-title">成为陪伴老师</view>
+    <view class="hero-sub">提交后由平台审核，通过后即可开设套餐</view>
+  </view>
+
+  <view class="glass flush">
+    <view class="field">
+      <view class="field-label">展示名（学员可见）</view>
+      <input class="input" placeholder="例如：林老师" placeholder-class="input-ph" maxlength="30" value="{{displayName}}" data-k="displayName" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <view class="field-label">真实姓名（加密保存，仅审核可见）</view>
+      <input class="input" placeholder="请填写身份证上的姓名" placeholder-class="input-ph" maxlength="30" value="{{realName}}" data-k="realName" bindinput="onInput" />
+    </view>
+  </view>
+
+  <view class="sec"><text class="sec-title">擅长方向</text><text class="muted">最多 5 个</text></view>
+  <view class="glass">
+    <view class="chips">
+      <view wx:for="{{presets}}" wx:key="name" class="chip {{item.on ? 'chip-on' : ''}}" data-i="{{index}}" bindtap="onTapDirection">{{item.name}}</view>
+    </view>
+  </view>
+
+  <view class="sec"><text class="sec-title">自我介绍</text></view>
+  <view class="glass">
+    <textarea class="textarea" placeholder="介绍你的经历、风格与擅长的帮助方式" placeholder-class="input-ph" maxlength="2000" value="{{intro}}" data-k="intro" bindinput="onInput" />
+  </view>
+
+  <view class="sec"><text class="sec-title">资质证书</text><text class="muted">选填，每行一项</text></view>
+  <view class="glass">
+    <textarea class="textarea" placeholder="例如：国家二级心理咨询师" placeholder-class="input-ph" value="{{credentials}}" data-k="credentials" bindinput="onInput" />
+  </view>
+</view>
+
+<view class="bar">
+  <button class="btn" disabled="{{submitting}}" bindtap="onSubmit">{{submitting ? '提交中…' : '提交申请'}}</button>
+</view>
