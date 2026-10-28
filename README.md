@@ -9,7 +9,7 @@ source ~/.nvm/nvm.sh && nvm use 24
 corepack enable pnpm
 pnpm install
 pnpm db:up                                    # 启动开发 PostgreSQL（端口 54329，含 liaoyu_test 测试库）
-pnpm -F @liaoyu/server create-admin boss 'password-123456'
+pnpm -F @liaoyu/server create-admin boss 'password-123456'   # 可加第三个参数 super|ops|finance，默认 super
 pnpm -F @liaoyu/server dev                    # http://localhost:8700
 ```
 
