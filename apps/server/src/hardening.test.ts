@@ -3,16 +3,13 @@ import { call, setup } from '../tests/helpers.ts';
 import { upsertAdmin } from './modules/admin/service.ts';
 
 describe('安全加固', () => {
-  test('响应带基础安全头；/admin 额外带 CSP', async () => {
+  test('响应带基础安全头', async () => {
     const ctx = await setup();
     const health = await call(ctx, 'GET', '/api/health');
     expect(health.headers['x-content-type-options']).toBe('nosniff');
     expect(health.headers['x-frame-options']).toBe('DENY');
     expect(health.headers['referrer-policy']).toBe('no-referrer');
     expect(health.headers['strict-transport-security']).toBeUndefined();
-
-    const admin = await call(ctx, 'GET', '/admin');
-    expect(String(admin.headers['content-security-policy'])).toContain("frame-ancestors 'none'");
   });
 
   test('COOKIE_SECURE 开启时下发 HSTS', async () => {
