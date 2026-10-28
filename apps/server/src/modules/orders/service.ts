@@ -139,6 +139,11 @@ export async function orderSummary(db: DbOrTx, q: OrderQuery = {}) {
   return { ...r, revenueCents: Number(r.revenueCents) };
 }
 
+export async function countOrders(db: DbOrTx, q: OrderQuery): Promise<number> {
+  const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(orders).where(orderFilter(q));
+  return r.n;
+}
+
 export async function queryOrders(db: DbOrTx, q: OrderQuery) {
   const query = db
     .select({

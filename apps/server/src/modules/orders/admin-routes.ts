@@ -8,7 +8,7 @@ import { formatDateTimeCN } from '../../lib/dates.ts';
 import { centsToYuan } from '../../lib/money.ts';
 import { DateStr, IdParam } from '../../lib/zod.ts';
 import { adminGuard } from '../admin/guard.ts';
-import { orderSummary, queryOrders } from './service.ts';
+import { countOrders, orderSummary, queryOrders } from './service.ts';
 
 const OrderQuerySchema = z.object({
   userId: IdParam.optional(),
@@ -39,6 +39,10 @@ export const adminOrderRoutes =
     app.get('/orders/summary', { onRequest: anyAdmin, schema: { querystring: OrderQuerySchema } }, async (req) =>
       orderSummary(deps.db, req.query),
     );
+
+    app.get('/orders/count', { onRequest: anyAdmin, schema: { querystring: OrderQuerySchema } }, async (req) => ({
+      total: await countOrders(deps.db, req.query),
+    }));
 
     app.get(
       '/orders.csv',

@@ -93,4 +93,14 @@ describe('管理端订单查询与导出', () => {
     const logs = await w.ctx.db.select({ action: auditLogs.action }).from(auditLogs);
     expect(logs.map((l) => l.action)).toContain('orders.export');
   });
+
+  test('计数：按同样筛选返回总数，不受分页影响', async () => {
+    const w = await world();
+    const count = async (query: Record<string, string | number> = {}) =>
+      (await call(w.ctx, 'GET', '/api/admin/orders/count', { cookie: w.cookie, query })).json();
+    expect(await count()).toEqual({ total: 2 });
+    expect(await count({ status: 'paid' })).toEqual({ total: 1 });
+    expect(await count({ teacherId: w.a })).toEqual({ total: 1 });
+    expect((await call(w.ctx, 'GET', '/api/admin/orders/count')).statusCode).toBe(401);
+  });
 });
