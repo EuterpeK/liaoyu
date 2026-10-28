@@ -6,3 +6,4 @@ docs
 coverage
 deploy
 apps/server/tests
+**/dist
